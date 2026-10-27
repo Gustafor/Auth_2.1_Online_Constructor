@@ -1,0 +1,38 @@
+"Next.js App Router OAuth client (Server Component + Route Handler)"
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+
+const clientId = process.env.{{ provider | upper }}_CLIENT_ID!;
+const redirectUri = process.env.OAUTH_REDIRECT_URI!;
+const scopes = "{{ scopes }}".split(",");
+const pkce = {{ pkce | lower }};
+const flow = "{{ flow }}";
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const code = searchParams.get("code");
+  const error = searchParams.get("error");
+
+  if (error) {
+    return Response.json({ error }, { status: 400 });
+  }
+
+  if (!code) {
+    const authUrl = `{{ authorization_url }}?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes.join(" "))}&response_type=code&pkce=${pkce}`;
+    return redirect(authUrl);
+  }
+
+  const tokenResponse = await fetch("{{ token_url }}", {
+    method: "POST",
+    body: JSON.stringify({
+      grant_type: "authorization_code",
+      code,
+      redirect_uri: redirectUri,
+      client_id: clientId,
+    }),
+  });
+
+  const tokens = await tokenResponse.json();
+  cookies().set("access_token", tokens.access_token);
+  return redirect("/dashboard");
+}

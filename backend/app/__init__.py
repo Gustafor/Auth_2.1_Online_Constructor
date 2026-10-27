@@ -1,0 +1,3 @@
+"""Auth-2.1 backend application package."""
+
+__version__ = "0.1.0"

@@ -1,0 +1,44 @@
+"Node.js Express OAuth 2.1 client"
+const express = require("express");
+const querystring = require("querystring");
+const fetch = require("node-fetch");
+
+const app = express();
+
+const clientId = process.env.{{ provider | upper }}_CLIENT_ID;
+const clientSecret = process.env.{{ provider | upper }}_CLIENT_SECRET;
+const redirectUri = process.env.OAUTH_REDIRECT_URI;
+const scopes = "{{ scopes }}".split(",");
+const pkce = {{ pkce | lower }};
+
+app.get("/login", (req, res) => {
+  const params = querystring.stringify({
+    client_id: clientId,
+    redirect_uri: redirectUri,
+    scope: scopes.join(" "),
+    response_type: "code",
+    ...(pkce ? { code_challenge_method: "S256", code_challenge: "YOUR_CODE_CHALLENGE" } : {}),
+  });
+  res.redirect("{{ authorization_url }}?" + params);
+});
+
+app.get("/callback", async (req, res) => {
+  const { code, error } = req.query;
+  if (error) {
+    return res.status(400).json({ error });
+  }
+  const tokenResp = await fetch("{{ token_url }}", {
+    method: "POST",
+    body: JSON.stringify({
+      grant_type: "authorization_code",
+      code,
+      redirect_uri: redirectUri,
+      client_id: clientId,
+      client_secret: clientSecret,
+    }),
+  });
+  const tokens = await tokenResp.json();
+  res.json(tokens);
+});
+
+app.listen(3000, () => console.log("Server running on http://localhost:3000"));

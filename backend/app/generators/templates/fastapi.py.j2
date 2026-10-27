@@ -1,0 +1,52 @@
+"Python FastAPI OAuth 2.1 client"
+from fastapi import FastAPI, Request, Query
+from fastapi.responses import RedirectResponse
+from pydantic import BaseSettings
+import httpx
+
+app = FastAPI(title="{{ app_name }} OAuth Client")
+
+
+class Settings(BaseSettings):
+    {{ provider | upper }}_CLIENT_ID: str
+    {{ provider | upper }}_CLIENT_SECRET: str
+    OAUTH_REDIRECT_URI: str
+    OAUTH_SCOPES: str = "{{ scopes }}"
+    OAUTH_PKCE: bool = {{ pkce | lower }}
+
+    class Config:
+        env_file = ".env"
+
+
+settings = Settings()
+
+
+@app.get("/login")
+async def login():
+    params = {
+        "client_id": getattr(settings, "{{ provider | upper }}_CLIENT_ID"),
+        "redirect_uri": settings.OAUTH_REDIRECT_URI,
+        "scope": settings.OAUTH_SCOPES,
+        "response_type": "code",
+    }
+    if settings.OAUTH_PKCE:
+        params["code_challenge_method"] = "S256"
+        params["code_challenge"] = "YOUR_CODE_CHALLENGE"
+    auth_url = "{{ authorization_url }}?" + "&".join(f"{k}={v}" for k, v in params.items())
+    return RedirectResponse(auth_url)
+
+
+@app.get("/callback")
+async def callback(code: str = Query(...)):
+    async with httpx.AsyncClient() as client:
+        token_resp = await client.post(
+            "{{ token_url }}",
+            data={
+                "grant_type": "authorization_code",
+                "code": code,
+                "redirect_uri": settings.OAUTH_REDIRECT_URI,
+                "client_id": getattr(settings, "{{ provider | upper }}_CLIENT_ID"),
+                "client_secret": getattr(settings, "{{ provider | upper }}_CLIENT_SECRET"),
+            },
+        )
+    return token_resp.json()

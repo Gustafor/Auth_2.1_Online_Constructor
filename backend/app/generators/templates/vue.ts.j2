@@ -1,0 +1,64 @@
+"Vue 3 + Composition API OAuth client"
+import { createBrowserClient } from "./lib/oauth";
+import { createApp } from "vue";
+import { createRouter, createWebHistory } from "vue-router";
+import App from "./App.vue";
+
+const clientId = import.meta.env.VITE_{{ provider | upper }}_CLIENT_ID;
+const redirectUri = import.meta.env.VITE_OAUTH_REDIRECT_URI;
+const scopes = "{{ scopes }}".split(",");
+
+const oauth = createBrowserClient({
+  provider: "{{ provider }}",
+  clientId,
+  redirectUri,
+  scopes,
+  pkce: {{ pkce | lower }},
+  flow: "{{ flow }}",
+});
+
+async function handleLogin() {
+  try {
+    const { url, codeVerifier } = await oauth.generateAuthorizationUrl();
+    localStorage.setItem("oauth_code_verifier", codeVerifier);
+    window.location.href = url;
+  } catch (error) {
+    console.error("Failed to start OAuth flow:", error);
+  }
+}
+
+async function handleCallback() {
+  const params = new URLSearchParams(window.location.search);
+  const code = params.get("code");
+  const error = params.get("error");
+
+  if (error) {
+    console.error("OAuth error:", error);
+    return;
+  }
+
+  if (!code) {
+    return;
+  }
+
+  const codeVerifier = localStorage.getItem("oauth_code_verifier");
+  try {
+    const tokens = await oauth.exchangeCode(code, codeVerifier);
+    localStorage.setItem("access_token", tokens.access_token);
+    router.push("/");
+  } catch (error) {
+    console.error("Failed to exchange code:", error);
+  }
+}
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes: [
+    { path: "/login", component: { template: `<button @click="handleLogin">Sign in</button>`, methods: { handleLogin } } },
+    { path: "/callback", component: { template: `<div>Signing in...</div>`, created: handleCallback } },
+  ],
+});
+
+const app = createApp(App);
+app.use(router);
+app.mount("#app");

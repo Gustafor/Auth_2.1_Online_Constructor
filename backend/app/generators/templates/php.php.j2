@@ -1,0 +1,45 @@
+"PHP OAuth 2.1 client (no framework)"
+<?php
+declare(strict_types=1);
+
+session_start();
+
+$clientId = getenv("{{ provider | upper }}_CLIENT_ID");
+$clientSecret = getenv("{{ provider | upper }}_CLIENT_SECRET");
+$redirectUri = getenv("OAUTH_REDIRECT_URI");
+$scopes = explode(" ", "{{ scopes }}");
+$pkce = {{ pkce | lower }} ? "true" : "false";
+
+if ($_GET["action"] ?? "" === "login") {
+    $params = http_build_query([
+        "client_id" => $clientId,
+        "redirect_uri" => $redirectUri,
+        "scope" => implode(" ", $scopes),
+        "response_type" => "code",
+    ]);
+    header("Location: {{ authorization_url }}?" . $params);
+    exit;
+}
+
+if ($_GET["action"] ?? "" === "callback") {
+    $code = $_GET["code"] ?? null;
+    $error = $_GET["error"] ?? null;
+    if ($error) {
+        http_response_code(400);
+        echo json_encode(["error" => $error]);
+        exit;
+    }
+    $ch = curl_init("{{ token_url }}");
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+        "grant_type" => "authorization_code",
+        "code" => $code,
+        "redirect_uri" => $redirectUri,
+        "client_id" => $clientId,
+        "client_secret" => $clientSecret,
+    ]));
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    $response = curl_exec($ch);
+    curl_close($ch);
+    echo $response;
+}
