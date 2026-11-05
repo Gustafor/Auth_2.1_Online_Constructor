@@ -1,41 +1,15 @@
-# Byte-compiled
+# Python
 __pycache__/
 *.py[cod]
-*$py.class
-
-# Virtual environments
 .venv/
-venv/
-env/
-
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-*~
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
-*.log
-logs/
-
-# Environment
-.env
-.env.local
-
-# Build
-dist/
-build/
 *.egg-info/
-
-# Frontend
+# Node
 node_modules/
-frontend/dist/
-frontend/.vite/
-
-# Archives
-*.zip
+dist/
+# Env / secrets
+.env
+*.key
+*.pem
+# OS
+Thumbs.db
+desktop.ini

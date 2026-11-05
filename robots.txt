@@ -1,0 +1,16 @@
+# Auth 2.1 + OIDC — разрешаем парсерам превью (LinkedIn, Twitter, Facebook и др.)
+User-agent: *
+Allow: /
+
+# Превью-боты соцсетей — явно разрешаем
+User-agent: LinkedInBot
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Slackbot-LinkExpanding
+Allow: /

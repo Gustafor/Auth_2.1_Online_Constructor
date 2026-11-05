@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="description" content="Auth 2.1 + OpenID Connect: 11 интерактивных диаграмм OAuth 2.1 / OIDC — PKCE, DPoP, PAR, Device Flow, Step-Up, выход. Как работает протокол и как он реализован.">
+<title>Auth 2.1 + OIDC — интерактивный конструктор потоков</title>
+<link rel="canonical" href="https://gustafor.github.io/Auth_2.1_Online_Constructor/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Auth 2.1 + OpenID Connect — конструктор потоков">
+<meta property="og:title" content="Auth 2.1 + OIDC — интерактивный конструктор потоков">
+<meta property="og:description" content="11 интерактивных диаграмм OAuth 2.1 / OpenID Connect: PKCE, DPoP, PAR, Device Flow, Step-Up, выход. Как работает протокол и как он реализован — шаг за шагом.">
+<meta property="og:url" content="https://gustafor.github.io/Auth_2.1_Online_Constructor/">
+<meta property="og:image" content="https://raw.githubusercontent.com/Gustafor/Auth_2.1_Online_Constructor/main/course/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Auth 2.1 + OpenID Connect — интерактивный конструктор потоков">
+<meta property="og:locale" content="ru_RU">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/Gustafor/Auth_2.1_Online_Constructor/main/course/og-cover.jpg">
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root {
+    --bg: #0d1015; --card: #151a22; --fg: #e8edf5; --muted: #11151b; --muted-fg: #97a4b7;
+    --border: #1c232d; --stroke-strong: #29313d;
+    --primary: #367de3; --primary-btn: #2b66c4; --accent: #83b6ff;
+    --green: #63d5ac; --red: #ef9297; --warn: #e8bb71; --code-bg: #0d1015;
+  }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.6 Inter, "Segoe UI", Roboto, Arial, sans-serif; }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 0 20px; }
+  .topbar { border-bottom: 1px solid var(--border); background: var(--card); }
+  .topbar .wrap { display: flex; align-items: center; justify-content: space-between; padding-top: 12px; padding-bottom: 12px; gap: 12px; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .logo { width: 28px; height: 28px; color: var(--accent); }
+  .brand-name { font-size: 14px; font-weight: 600; }
+  .hero { padding: 56px 0 32px; }
+  h1 { font-size: 26px; font-weight: 600; letter-spacing: -0.01em; margin: 0 0 12px; line-height: 1.3; }
+  .lead { color: var(--muted-fg); font-size: 16px; max-width: 75ch; margin: 0 0 24px; }
+  .cta { display: inline-flex; align-items: center; gap: 8px; background: var(--primary-btn); color: #fff; font: inherit; font-size: 14px; font-weight: 600; border: 0; border-radius: 7px; padding: 12px 24px; cursor: pointer; text-decoration: none; }
+  .cta:hover { background: var(--primary); }
+  .cta:focus-visible, .ghost:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .ghost { display: inline-flex; align-items: center; gap: 8px; background: transparent; color: var(--muted-fg); font: inherit; font-size: 14px; border: 1px solid var(--stroke-strong); border-radius: 7px; padding: 12px 20px; cursor: pointer; text-decoration: none; }
+  .ghost:hover { color: var(--fg); background: var(--muted); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0 0; }
+  .chip { font-size: 12px; font-weight: 500; color: var(--muted-fg); background: var(--muted); border: 1px solid var(--border); border-radius: 5px; padding: 4px 8px; }
+  .chip b { color: var(--accent); font-family: "Roboto Mono", monospace; font-weight: 500; }
+  h2 { font-size: 17px; font-weight: 600; margin: 40px 0 12px; }
+  .shots { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .shot { border: 1px solid var(--border); border-radius: 7px; overflow: hidden; background: var(--card); }
+  .shot img { display: block; width: 100%; height: auto; }
+  .shot figcaption { font-size: 12px; color: var(--muted-fg); padding: 8px 12px; border-top: 1px solid var(--border); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 7px; padding: 16px 20px; }
+  .card h3 { font-size: 14px; font-weight: 600; margin: 0 0 8px; color: var(--accent); }
+  .card p { margin: 0; color: var(--muted-fg); font-size: 13px; }
+  .card ul { margin: 0; padding-left: 16px; color: var(--muted-fg); font-size: 13px; }
+  .card li { margin: 4px 0; }
+  .card a { color: var(--accent); text-decoration: none; }
+  .card a:hover { text-decoration: underline; }
+  footer { border-top: 1px solid var(--border); margin-top: 56px; padding: 24px 0; color: var(--muted-fg); font-size: 12px; }
+  footer a { color: var(--muted-fg); }
+  code { font-family: "Roboto Mono", monospace; font-size: 11px; background: var(--code-bg); border: 1px solid var(--border); padding: 0 4px; border-radius: 5px; }
+  @media (max-width: 767px) { .shots, .grid { grid-template-columns: 1fr; } .hero { padding: 40px 0 24px; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="wrap">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l8 3.5V12c0 4.8-3.4 8.4-8 10-4.6-1.6-8-5.2-8-10V5.5z"/><path d="M9 11.5l2 2 4-4.5"/></svg>
+      <span class="brand-name">Auth 2.1 + OpenID Connect</span>
+    </div>
+    <a class="ghost" href="https://github.com/Gustafor/Auth_2.1_Online_Constructor" style="padding: 8px 12px; font-size: 12px;">GitHub</a>
+  </div>
+</div>
+
+<div class="wrap">
+  <section class="hero">
+    <h1>Как работает OAuth 2.1 / OpenID Connect — и как это реализовать</h1>
+    <p class="lead">11 интерактивных диаграмм последовательности: кликайте по шагам, читайте, что происходит, что делаете вы в реализации, и видите HTTP-трафик каждого шага. Дизайн по брендбуку Phone Agent.</p>
+    <a class="cta" href="course/auth21-diagrams.html">Открыть конструктор потоков →</a>
+    <div class="chips">
+      <span class="chip"><b>11</b> диаграмм</span>
+      <span class="chip"><b>74</b> шага</span>
+      <span class="chip">PKCE (RFC 7636)</span>
+      <span class="chip">DPoP (RFC 9449)</span>
+      <span class="chip">PAR (RFC 9126)</span>
+      <span class="chip">Device Flow (RFC 8628)</span>
+      <span class="chip">Step-Up (RFC 9470)</span>
+      <span class="chip">Refresh-ротация</span>
+    </div>
+  </section>
+
+  <h2>Что внутри</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>Диаграммы</h3>
+      <ul>
+        <li>Основной вход — Authorization Code + PKCE + OIDC (20 шагов)</li>
+        <li>PKCE, DPoP, PAR — защита от перехвата кода и CSRF</li>
+        <li>Device Flow, Step-Up / MFA, Выход, Проверка токена, Discovery</li>
+        <li>Авторизация confidential-клиента, Refresh-ротация</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Каждый шаг — атомарный</h3>
+      <ul>
+        <li><b style="color:var(--fg)">Что происходит</b> — механика и RFC-ссылки</li>
+        <li><b style="color:var(--fg)">Что делаете вы</b> — конкретные действия реализации</li>
+        <li><b style="color:var(--fg)">HTTP-трафик</b> — реальные запросы и ответы</li>
+        <li>Атаки и сбои — красные пунктирные стрелки с пояснением</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Документация</h3>
+      <ul>
+        <li><a href="course/Auth2.1-все-диаграммы-шаги.md">Все 11 диаграмм и 74 шага — одним MD</a></li>
+        <li><a href="course/Брендбук-auth21-diagrams.md">Брендбук приложения (токи, ритм, антипаттерны)</a></li>
+        <li>Глоссарий терминов — 50+ терминов с поиском</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Инструменты</h3>
+      <ul>
+        <li>Cheat Sheet — параметры и payloads с копированием</li>
+        <li>Связка «термин → шаг диаграммы» в обе стороны</li>
+        <li>Тёмная / светлая тема, мобильный режим (список шагов)</li>
+        <li>Один HTML-файл без зависимостей — работает офлайн</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>Скриншоты</h2>
+  <div class="shots">
+    <figure class="shot">
+      <img src="course/screenshots/shot-dark-core.png" alt="Диаграмма «Основной вход» — шаг 1, тёмная тема">
+      <figcaption>Основной вход: Authorization Code + PKCE + OIDC, шаг 1 из 20</figcaption>
+    </figure>
+    <figure class="shot">
+      <img src="course/screenshots/shot-dpop.png" alt="Диаграмма DPoP — атака перехвата токена">
+      <figcaption>DPoP: почему украденный access-токен без ключа не работает</figcaption>
+    </figure>
+  </div>
+
+  <footer class="wrap" style="padding-left:0; padding-right:0;">
+    <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+      <span>Auth 2.1 + OIDC Online Constructor · <a href="https://github.com/Gustafor/Auth_2.1_Online_Constructor">github.com/Gustafor/Auth_2.1_Online_Constructor</a></span>
+      <span>Дизайн по брендбуку Phone Agent</span>
+    </div>
+  </footer>
+</div>
+</body>
+</html>

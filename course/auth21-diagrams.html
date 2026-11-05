@@ -1,0 +1,2012 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="Auth 2.1 + OpenID Connect: интерактивные диаграммы последовательности с пояснениями — как работает протокол и как он реализован.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>Auth 2.1 + OIDC — как работает и как реализовано (диаграммы)</title>
+<link rel="canonical" href="https://gustafor.github.io/Auth_2.1_Online_Constructor/">
+<meta name="theme-color" content="#0d1015">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Auth 2.1 + OpenID Connect — конструктор потоков">
+<meta property="og:title" content="Auth 2.1 + OIDC — интерактивный конструктор потоков">
+<meta property="og:description" content="11 интерактивных диаграмм OAuth 2.1 / OpenID Connect: PKCE, DPoP, PAR, Device Flow, Step-Up, выход. Как работает протокол и как он реализован — шаг за шагом.">
+<meta property="og:url" content="https://gustafor.github.io/Auth_2.1_Online_Constructor/">
+<meta property="og:image" content="https://raw.githubusercontent.com/Gustafor/Auth_2.1_Online_Constructor/main/course/og-cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Auth 2.1 + OpenID Connect — интерактивный конструктор потоков">
+<meta property="og:locale" content="ru_RU">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Auth 2.1 + OIDC — интерактивный конструктор потоков">
+<meta name="twitter:description" content="11 интерактивных диаграмм OAuth 2.1 / OIDC: PKCE, DPoP, PAR, Device Flow, Step-Up, выход — шаг за шагом.">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/Gustafor/Auth_2.1_Online_Constructor/main/course/og-cover.jpg">
+
+<script>
+(function () {
+  try {
+    var t = localStorage.getItem('a21diag-theme');
+    if (!t) t = 'dark';
+    document.documentElement.setAttribute('data-theme', t);
+  } catch (e) {}
+})();
+</script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  :root {
+    /* Phone Agent · брендбук 04: графитовая тёмная тема (рекомендация) */
+    --bg: #0d1015; --card: #151a22; --fg: #e8edf5; --muted: #11151b; --muted-fg: #97a4b7;
+    --border: #1c232d; --stroke-strong: #29313d;
+    --primary: #367de3; --primary-btn: #2b66c4; --primary-fg: #ffffff;
+    --accent: #83b6ff; --green: #63d5ac; --red: #ef9297; --warn: #e8bb71; --s1: #83b6ff;
+    --code-bg: #0d1015;
+  }
+  html[data-theme="light"] {
+    --bg: #eef1f6; --card: #ffffff; --fg: #0d1015; --muted: #e3e8f0; --muted-fg: #5a6678;
+    --border: #cfd7e2; --stroke-strong: #b6c0cd;
+    --primary: #367de3; --primary-btn: #2456a5; --primary-fg: #ffffff;
+    --accent: #2b6fd6; --green: #1f9d70; --red: #d0454d; --warn: #b9822f; --s1: #2b6fd6;
+    --code-bg: #f4f6fa;
+  }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 14px/1.6 Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  .wrap { max-width: 1440px; margin: 0 auto; padding-left: 20px; padding-right: 20px; }
+  .sticky-top { position: sticky; top: 0; z-index: 100; background: var(--card); border-bottom: 1px solid var(--border); }
+  .site-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-top: 12px; padding-bottom: 12px; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand .logo { display: inline-flex; width: 36px; height: 36px; border-radius: 8px; background: var(--primary); color: var(--primary-fg); align-items: center; justify-content: center; flex: none; }
+  .brand .logo svg { width: 20px; height: 20px; }
+  .brand-name { font-weight: 600; font-size: 16px; line-height: 1.25; letter-spacing: -0.01em; }
+  .brand-sub { font-size: 12px; color: var(--muted-fg); }
+  .header-actions { display: flex; gap: 8px; align-items: center; }
+  .tabs { display: flex; flex-wrap: wrap; gap: 4px; padding-bottom: 8px; }
+  .tab { border: 1px solid transparent; background: transparent; color: var(--muted-fg); border-radius: 7px; padding: 8px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+  .tab:hover { background: var(--muted); color: var(--fg); }
+  .tab.active { border-color: var(--primary); background: var(--muted); color: var(--accent); font-weight: 600; }
+  main.wrap { padding-top: 24px; padding-bottom: 40px; }
+  .panel[hidden] { display: none; }
+  h2 { font-size: 26px; font-weight: 600; letter-spacing: -0.01em; margin: 4px 0 12px; }
+  h3 { font-size: 17px; font-weight: 600; margin: 20px 0 8px; }
+  p { margin: 8px 0; }
+  code {
+    font-family: "Roboto Mono", ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", monospace;
+    font-size: 11px; background: var(--code-bg); border: 1px solid var(--border);
+    padding: 0 4px; border-radius: 5px;
+  }
+  pre {
+    background: var(--code-bg); border: 1px solid var(--border); border-radius: 7px;
+    padding: 12px 16px; overflow-x: auto; line-height: 1.55; margin: 8px 0;
+    font-family: "Roboto Mono", ui-monospace, "SF Mono", Consolas, monospace;
+  }
+  pre code { background: none; border: none; padding: 0; font-size: 13px; }
+  .muted { color: var(--muted-fg); }
+  .small { font-size: 13px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px; font: inherit; font-size: 13px;
+    border: 1px solid var(--stroke-strong); background: var(--card); color: var(--fg);
+    border-radius: 7px; padding: 8px 12px; cursor: pointer;
+  }
+  .btn:hover { background: var(--muted); }
+  .btn:disabled { opacity: .45; cursor: default; }
+  .btn-primary { background: var(--primary-btn); border-color: var(--primary-btn); color: var(--primary-fg); }
+  .btn-primary:hover { background: var(--primary-btn); filter: brightness(1.12); }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 7px; padding: 16px 20px; }
+  .card p { max-width: 75ch; line-height: 1.6; }
+  .card ul.dyou { max-width: 75ch; }
+  p strong { font-weight: 600; }
+  .viz-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+  /* ── Диаграмма последовательности (тот же принцип, что вкладка «Пошагово») ── */
+  .dseq svg { display: block; width: 100%; height: auto; }
+  .flow-svg text { font-size: 11px; fill: var(--fg); }
+  .flow-svg .ttl { font-size: 13px; font-weight: 600; line-height: 1.2; }
+  .flow-svg .sub { font-size: 12px; fill: var(--muted-fg); line-height: 1.4; }
+  .flow-svg .lbl { line-height: 1.3; }
+  .flow-svg .lbl { fill: var(--muted-fg); paint-order: stroke; stroke: var(--bg); stroke-width: 3px; transition: fill .25s; }
+  .flow-svg .lbl.warn { fill: var(--red); }
+  .flow-svg .fstep { color: var(--muted-fg); opacity: .5; transition: opacity .25s, color .25s; }
+  .flow-svg .fstep line { stroke: currentColor; stroke-width: 1.4; }
+  .flow-svg .fstep .loop { stroke: currentColor; fill: none; stroke-width: 1.4; }
+  .flow-svg .fstep .chip circle { fill: var(--muted); transition: fill .25s; }
+  .flow-svg .fstep .chip .chipnum { fill: var(--fg); transition: fill .25s; }
+  .flow-svg .fstep.active { color: var(--s1); opacity: 1; }
+  .flow-svg .fstep.active .lbl { fill: var(--fg); font-weight: 500; }
+  .flow-svg .fstep.active .lbl.warn { fill: var(--red); }
+  .flow-svg .fstep.active .chip circle { fill: var(--primary-btn); }
+  .flow-svg .fstep.active .chip .chipnum { fill: var(--primary-fg); }
+  .flow-svg .bandhit { cursor: pointer; }
+  @media (prefers-reduced-motion: no-preference) {
+    .flow-svg .fstep.active line, .flow-svg .fstep.active .loop { stroke-dasharray: 1000; animation: a21draw .7s ease-out; }
+    @keyframes a21draw { from { stroke-dasharray: 5 5; } to { stroke-dasharray: 1000; } }
+  }
+  .vrow {
+    display: flex; gap: 8px; width: 100%; align-items: flex-start; background: transparent;
+    border: none; padding: 8px 12px; border-radius: 7px; text-align: start; color: var(--fg); font: inherit; cursor: pointer;
+  }
+  .vrow:hover { background: var(--muted); }
+  .vrow[aria-pressed="true"] { background: var(--muted); }
+  .vnum { flex: none; width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; background: var(--muted); margin-top: 0; }
+  .vrow[aria-pressed="true"] .vnum { background: var(--primary); color: var(--primary-fg); }
+  .vbody { display: flex; flex-direction: column; gap: 4px; }
+  .vtitle { font-weight: 500; }
+  .vmeta { color: var(--muted-fg); font-size: 12px; }
+  .dyou { margin: 0 0 12px; padding-left: 24px; }
+  .dyou li { margin: 4px 0; }
+  .lead { border-left: 3px solid var(--accent); background: var(--muted); border-radius: 0 7px 7px 0; padding: 12px; margin: 12px 0; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--muted-fg); margin: 8px 0 12px; }
+  .legend i { display: inline-block; width: 22px; height: 0; border-top: 2px solid var(--s1); vertical-align: middle; margin-right: 4px; }
+  .legend .warn i { border-top-style: dashed; border-color: var(--red); }
+  .keys { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 12px; color: var(--muted-fg); background: var(--muted); border: 1px solid var(--border); border-radius: 7px; padding: 8px 12px; margin: 0 0 16px; }
+  .keys b { color: var(--fg); font-weight: 500; font-family: "Roboto Mono", monospace; font-size: 12px; }
+  .gsearch { flex: 1; min-width: 220px; max-width: 440px; font: inherit; font-size: 13px; padding: 8px 12px; border-radius: 7px; border: 1px solid var(--stroke-strong); background: var(--card); color: var(--fg); }
+  .gsearch::placeholder { color: var(--muted-fg); }
+  .gcount { font-size: 12px; color: var(--muted-fg); }
+  .ggroup { margin: 20px 0 4px; font-size: 13px; font-weight: 600; color: var(--accent); letter-spacing: .02em; }
+  .gitem { padding: 12px; border: 1px solid var(--border); border-radius: 7px; background: var(--card); margin: 8px 0; }
+  .gterm { display: flex; gap: 8px; flex-wrap: wrap; align-items: baseline; }
+  .gname { font-family: "Roboto Mono", monospace; font-weight: 500; font-size: 14px; color: var(--fg); }
+  .gfull { color: var(--muted-fg); font-size: 12px; }
+  .gdef { margin: 8px 0 0; font-size: 13px; line-height: 1.55; }
+  .gwhere { margin: 8px 0 0; font-size: 12px; color: var(--muted-fg); }
+  .gwhere b { color: var(--accent); font-weight: 500; }
+  .glos-search { width: 100%; max-width: 460px; font: inherit; font-size: 14px; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--stroke-strong, var(--border)); background: var(--card); color: var(--fg); margin: 4px 0 12px; }
+  .glos-empty { color: var(--muted-fg); font-size: 13px; padding: 8px 0; }
+  .btn .icon { width: 18px; height: 18px; flex: none; }
+  [data-theme="dark"] .icon-sun, [data-theme="light"] .icon-moon { display: none; }
+  .gmodal { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; padding: 16px; }
+  .gmodal[hidden] { display: none; }
+  .goverlay { position: absolute; inset: 0; background: rgba(4, 7, 12, .62); border: 0; padding: 0; }
+  .gbox { position: relative; width: min(780px, 100%); max-height: min(82vh, 100%); overflow: auto; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px 20px; }
+  .ghead { display: flex; align-items: center; gap: 8px; justify-content: space-between; margin-bottom: 4px; }
+  .ghead h2 { margin: 0; }
+  .gsearch { width: 100%; margin: 8px 0; padding: 8px 12px; font: inherit; font-size: 13px; background: var(--bg); color: var(--fg); border: 1px solid var(--stroke-strong); border-radius: 7px; }
+  .gsearch::placeholder { color: var(--muted-fg); }
+  .gcats { display: flex; flex-wrap: wrap; gap: 4px; margin: 8px 0 16px; }
+  .gcat { font: inherit; font-size: 12px; padding: 4px 8px; border-radius: 7px; border: 1px solid var(--stroke-strong); background: transparent; color: var(--muted-fg); cursor: pointer; }
+  .gcat:hover { background: var(--muted); color: var(--fg); }
+  .gcat[aria-pressed="true"] { background: var(--muted); border-color: var(--primary); color: var(--accent); font-weight: 600; }
+  .grest { flex: 1; min-width: 0; }
+  .grest .gdef { margin-bottom: 8px; }
+  .gtags { display: flex; flex-wrap: wrap; gap: 4px; }
+  .gtag { font: inherit; font-family: "Roboto Mono", monospace; font-size: 11px; line-height: 1; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--stroke-strong); background: transparent; color: var(--muted-fg); cursor: pointer; transition: background .15s, color .15s, border-color .15s; }
+  .gtag:hover { background: var(--muted); color: var(--fg); border-color: var(--accent); }
+  .gtag:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  @media (max-width: 640px) { .grest { min-width: 0; } }
+  .gitem { display: flex; gap: 12px; align-items: baseline; padding: 8px 12px; border-radius: 7px; margin: 0 -12px; }
+  .gitem:hover { background: var(--muted); }
+  .gitem + .gitem { margin-top: 4px; }
+  .gterm { flex: none; width: 224px; font-family: "Roboto Mono", monospace; font-size: 12px; font-weight: 500; color: var(--fg); }
+  .gdef { margin: 0; font-size: 13px; color: var(--muted-fg); }
+  .gempty { padding: 12px 0; color: var(--muted-fg); font-size: 13px; }
+  @media (max-width: 640px) { .gitem { flex-direction: column; gap: 4px; } .gterm { width: auto; } }
+  /* Форм-факт: фокус всегда виден (брендбук 6.3 «Контраст и focus проверены») */
+  :focus-visible { outline: 2px solid var(--accent) !important; outline-offset: 2px; }
+  .tab:focus, .btn:focus, .vrow:focus { outline: 2px solid var(--accent) !important; outline-offset: 1px; }
+  /* Уважение reduced-motion */
+  @media (prefers-reduced-motion: reduce) {
+    .flow-svg .fstep.active line, .flow-svg .fstep.active .loop { animation: none; stroke-dasharray: none; }
+    * { scroll-behavior: auto !important; }
+  }
+  /* Диаграмма: подписи не вылетают за край */
+  .dseq { overflow-x: auto; overflow-y: hidden; }
+  .dseq svg { min-width: 560px; }
+  /* Липкая шапка текущего шага */
+  .step-sticky { position: sticky; top: 0; z-index: 5; background: var(--bg); padding: 8px 0; margin: 8px 0 0; border-bottom: 1px solid var(--border); display: flex; gap: 12px; align-items: baseline; }
+  .step-sticky .ss-num { font-family: "Roboto Mono", monospace; font-size: 12px; color: var(--accent); flex: none; }
+  .step-sticky .ss-t { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  @media (max-width: 560px) { .brand-sub { display: none; } .step-sticky .ss-t { font-size: 12px; } }
+  /* Анимация перелёта «пакета данных» вдоль стрелки активного шага */
+  .flow-svg .pkt-trail { opacity: .22; }
+  .flow-svg .pkt-pulse { transform-box: fill-box; transform-origin: center; animation: a21pulse .5s ease-out forwards; }
+  @keyframes a21pulse { from { transform: scale(.4); opacity: .8; } to { transform: scale(2.4); opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .flow-svg .pkt-pulse { animation: none; opacity: 0; } }
+  /* ── Cheat Sheet: левая панель (sidebar) ── */
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 350px; gap: 24px; align-items: start; }
+  .sidebar { grid-column: 2; grid-row: 1; position: sticky; top: 128px; max-height: calc(100vh - 148px); overflow-y: auto;
+    background: var(--card); border: 1px solid var(--border); border-radius: 7px; padding: 16px; scrollbar-width: thin; }
+  .side-h { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted-fg); margin: 0 0 8px; }
+  .side-title { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; margin: 0 0 8px; }
+  .side-lead { font-size: 12px; color: var(--muted-fg); margin: 0 0 12px; }
+  .acc { border: 1px solid var(--border); border-radius: 7px; margin-bottom: 8px; background: var(--bg); }
+  .acc summary { list-style: none; }
+  .acc summary::-webkit-details-marker { display: none; }
+  .acc-btn { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%;
+    background: transparent; border: none; color: var(--fg); font: inherit; font-size: 13px; font-weight: 600;
+    padding: 8px 12px; cursor: pointer; border-radius: 7px; text-align: start; }
+  .acc-btn:hover { background: var(--muted); }
+  .acc-btn .chev { flex: none; color: var(--muted-fg); display: inline-flex; transition: transform .2s; }
+  .acc-btn .chev svg { width: 14px; height: 14px; }
+  .acc[open] .acc-btn .chev { transform: rotate(90deg); }
+  .acc-body { padding: 0 12px 12px; }
+  details.acc:not([open]) > .acc-body { display: none; }
+  .side-p { font-size: 12px; margin: 4px 0; }
+  .gl { margin: 0; display: flex; flex-direction: column; gap: 12px; }
+  .gl > div { border-left: 2px solid transparent; padding: 4px 0 4px 8px; margin-left: -12px; border-radius: 0 5px 5px 0; transition: border-color .2s, background .2s; }
+  .gl > div.rel { border-left-color: var(--accent); background: var(--muted); }
+  .gl dt { font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .gl dd { margin: 0; font-size: 12px; color: var(--muted-fg); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--c, var(--muted-fg)); flex: none; }
+  .en { color: var(--muted-fg); font-weight: 400; font-size: 11px; }
+  .stepgo { font: inherit; font-size: 11px; color: var(--accent); background: var(--muted); border: 1px solid var(--border);
+    border-radius: 5px; padding: 0 8px; cursor: pointer; white-space: nowrap; }
+  .stepgo:hover { border-color: var(--accent); }
+  .codeblk { position: relative; margin: 8px 0 12px; background: var(--code-bg); border: 1px solid var(--stroke-strong); border-radius: 7px; }
+  .codeblk code { display: block; background: none; border: none; padding: 12px; font-size: 11px; line-height: 1.55;
+    color: var(--fg); overflow-x: auto; white-space: pre; margin: 0; }
+  .codeblk .codecap { position: absolute; top: -4px; left: 12px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--muted-fg); background: var(--code-bg); padding: 0 4px; }
+  .copybtn { position: absolute; top: 8px; right: 8px; width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center;
+    background: var(--card); border: 1px solid var(--stroke-strong); border-radius: 5px; color: var(--muted-fg); cursor: pointer; padding: 0; }
+  .copybtn:hover { color: var(--fg); border-color: var(--accent); }
+  .copybtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .copybtn svg { width: 14px; height: 14px; }
+  .copybtn .ic-check { display: none; }
+  .copybtn.ok { color: var(--green); border-color: var(--green); }
+  .copybtn.ok .ic-copy { display: none; }
+  .copybtn.ok .ic-check { display: block; }
+  .side-foot { font-size: 11px; color: var(--muted-fg); margin: 4px 0 0; }
+  @media (max-width: 1199px) {
+    .layout { display: block; }
+    .sidebar { position: static; max-height: none; grid-column: auto; margin-bottom: 16px; }
+  }
+  @media (max-width: 767px) { .wrap { padding-left: 16px; padding-right: 16px; } }
+
+</style>
+</head>
+<body>
+<header class="sticky-top">
+  <div class="wrap">
+    <div class="site-header">
+      <div class="brand">
+        <span class="logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 3.5V12c0 4.8-3.4 8.4-8 10-4.6-1.6-8-5.2-8-10V5.5z"/><path d="M9 11.5l2 2 4-4.5"/></svg>
+        </span>
+        <span>
+          <div class="brand-name">Auth 2.1 + OpenID Connect</div>
+          <div class="brand-sub">как работает протокол и как он реализован · дизайн по брендбуку Phone Agent (04: палитра, 4.2: Inter/Roboto Mono, 5.3: ритм 4/8/12/16/24/32)</div>
+        </span>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-ghost" id="a21-theme" type="button" aria-label="Переключить на светлую тему" title="Переключить тему">
+          <svg class="icon icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+          <svg class="icon icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4.5"/><line x1="12" y1="1.5" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22.5" y2="12"/><line x1="4.6" y1="4.6" x2="6.4" y2="6.4"/><line x1="17.6" y1="17.6" x2="19.4" y2="19.4"/><line x1="4.6" y1="19.4" x2="6.4" y2="17.6"/><line x1="17.6" y1="6.4" x2="19.4" y2="4.6"/></svg>
+        </button>
+        <button class="btn btn-ghost" id="a21-gopen" type="button" aria-label="Открыть глоссарий терминов" title="Глоссарий терминов">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V2H6.5A2.5 2.5 0 0 0 4 4.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/></svg>
+          Глоссарий
+        </button>
+      </div>
+    </div>
+    <nav class="tabs" id="a21-tablist" role="tablist" aria-label="Диаграммы Auth 2.1">
+      <button class="tab active" data-diag="core"    aria-selected="true">Основной вход</button>
+      <button class="tab" data-diag="pkce"      aria-selected="false">PKCE</button>
+      <button class="tab" data-diag="client"    aria-selected="false">Авторизация клиента</button>
+      <button class="tab" data-diag="refresh"   aria-selected="false">Refresh-ротация</button>
+      <button class="tab" data-diag="dpop"      aria-selected="false">DPoP</button>
+      <button class="tab" data-diag="device"    aria-selected="false">Device Flow</button>
+      <button class="tab" data-diag="stepup"    aria-selected="false">Step-Up / MFA</button>
+      <button class="tab" data-diag="logout"    aria-selected="false">Выход</button>
+      <button class="tab" data-diag="token"     aria-selected="false">Проверка токена</button>
+      <button class="tab" data-diag="discover"  aria-selected="false">Discovery</button>
+      <button class="tab" data-diag="par"       aria-selected="false">PAR (9126)</button>
+    </nav>
+  </div>
+</header>
+<main class="wrap" id="a21-main">
+  <div class="layout">
+  <div class="maincol">
+  <div class="keys" role="note" aria-label="Расшифровка аббревиатур">
+    <span><b>РП</b> — Relying Party, ваше приложение</span>
+    <span><b>АС</b> — Authorization Server / OpenID Provider (сервер авторизации)</span>
+    <span><b>API (ресурс)</b> — сервер данных, выдающий их по access-токену</span>
+    <span><b>JWKS</b> — публичные ключи AS для проверки подписи</span>
+    <span>наведите на узел или стрелку — полная подпись</span>
+  </div>
+  <section class="panel" id="a21-p-core" role="tabpanel" hidden>
+    <h2>Основной вход — Authorization Code + PKCE + OIDC</h2>
+    <p class="muted small">Кликайте по шагам на диаграмме или листайте кнопками. Под диаграммой — что происходит, что делаете вы и HTTP-трафик шага.</p>
+    <div class="viz-controls">
+      <button class="btn" id="a21-prev-core" type="button">← Назад</button>
+      <span class="small" id="a21-pos-core" aria-live="polite">Шаг 1</span>
+      <button class="btn btn-primary" id="a21-next-core" type="button">Вперёд →</button>
+    </div>
+    <div class="step-sticky"><span class="ss-num" id="a21-ssn-core">1</span><span class="ss-t" id="a21-sst-core"></span></div>
+    <div class="legend"><span><i></i>запрос/ответ</span><span class="warn"><i></i>атака или сбой</span><span>кружок — номер шага, клик по нему открывает пояснение</span></div>
+    <div class="dseq" id="a21-seq-core"></div>
+    <div id="a21-list-core" hidden></div>
+    <div class="card" style="margin-top:16px">
+      <h3 id="a21-dt-core" style="margin-top:0"></h3>
+      <p id="a21-dd-core"></p>
+      <p><strong>Что делаете вы (реализация):</strong></p>
+      <ul class="dyou" id="a21-dy-core"></ul>
+      <pre><code id="a21-dc-core"></code></pre>
+    </div>
+  </section>
+  <section class="panel" id="a21-p-pkce" role="tabpanel" hidden>
+    <h2>PKCE — половинка ключа против перехвата code</h2>
+    <p class="muted small">Кликайте по шагам на диаграмме или листайте кнопками. Под диаграммой — что происходит, что делаете вы и HTTP-трафик шага.</p>
+    <div class="viz-controls">
+      <button class="btn" id="a21-prev-pkce" type="button">← Назад</button>
+      <span class="small" id="a21-pos-pkce" aria-live="polite">Шаг 1</span>
+      <button class="btn btn-primary" id="a21-next-pkce" type="button">Вперёд →</button>
+    </div>
+    <div class="step-sticky"><span class="ss-num" id="a21-ssn-pkce">1</span><span class="ss-t" id="a21-sst-pkce"></span></div>
+    <div class="legend"><span><i></i>запрос/ответ</span><span class="warn"><i></i>атака или сбой</span><span>кружок — номер шага, клик по нему открывает пояснение</span></div>
+    <div class="dseq" id="a21-seq-pkce"></div>
+    <div id="a21-list-pkce" hidden></div>
+    <div class="card" style="margin-top:16px">
+      <h3 id="a21-dt-pkce" style="margin-top:0"></h3>
+      <p id="a21-dd-pkce"></p>
+      <p><strong>Что делаете вы (реализация):</strong></p>
+      <ul class="dyou" id="a21-dy-pkce"></ul>
+      <pre><code id="a21-dc-pkce"></code></pre>
+    </div>
+  </section>
+  <section class="panel" id="a21-p-client" role="tabpanel" hidden>
+    <h2>Авторизация confidential-клиента — private_key_jwt и mTLS</h2>
+    <p class="muted small">Кликайте по шагам на диаграмме или листайте кнопками. Под диаграммой — что происходит, что делаете вы и HTTP-трафик шага.</p>
+    <div class="viz-controls">
+      <button class="btn" id="a21-prev-client" type="button">← Назад</button>
+      <span class="small" id="a21-pos-client" aria-live="polite">Шаг 1</span>
+      <button class="btn btn-primary" id="a21-next-client" type="button">Вперёд →</button>
+    </div>
+    <div class="step-sticky"><span class="ss-num" id="a21-ssn-client">1</span><span class="ss-t" id="a21-sst-client"></span></div>
+    <div class="legend"><span><i></i>запрос/ответ</span><span class="warn"><i></i>атака или сбой</span><span>кружок — номер шага, клик по нему открывает пояснение</span></div>
+    <div class="dseq" id="a21-seq-client"></div>
+    <div id="a21-list-client" hidden></div>
+    <div class="card" style="margin-top:16px">
+      <h3 id="a21-dt-client" style="margin-top:0"></h3>
+      <p id="a21-dd-client"></p>
+      <p><strong>Что делаете вы (реализация):</strong></p>
+      <ul class="dyou" id="a21-dy-client"></ul>
+      <pre><code id="a21-dc-client"></code></pre>
+    </div>
+  </section>
+  <section class="panel" id="a21-p-refresh" role="tabpanel" hidden>
+    <h2>Refresh-ротация и обнаружение повторного использования</h2>
+    <p class="muted small">Кликайте по шагам на диаграмме или листайте кнопками. Под диаграммой — что происходит, что делаете вы и HTTP-трафик шага.</p>
+    <div class="viz-controls">
+      <button class="btn" id="a21-prev-refresh" type="button">← Назад</button>
+      <span class="small" id="a21-pos-refresh" aria-live="polite">Шаг 1</span>
+      <button class="btn btn-primary" id="a21-next-refresh" type="button">Вперёд →</button>
+    </div>
+    <div class="step-sticky"><span class="ss-num" id="a21-ssn-refresh">1</span><span class="ss-t" id="a21-sst-refresh"></span></div>
+    <div class="legend"><span><i></i>запрос/ответ</span><span class="warn"><i></i>атака или сбой</span><span>кружок — номер шага, клик по нему открывает пояснение</span></div>
+    <div class="dseq" id="a21-seq-refresh"></div>
+    <div id="a21-list-refresh" hidden></div>
+    <div class="card" style="margin-top:16px">
+      <h3 id="a21-dt-refresh" style="margin-top:0"></h3>
+      <p id="a21-dd-refresh"></p>
+      <p><strong>Что делаете вы (реализация):</strong></p>
+      <ul class="dyou" id="a21-dy-refresh"></ul>
+      <pre><code id="a21-dc-refresh"></code></pre>
+    </div>
+  </section>
+  <section class="panel" id="a21-p-dpop" role="tabpanel" hidden>
+    <h2>DPoP — токен, привязанный к ключу предъявителя</h2>
+    <p class="muted small">Кликайте по шагам на диаграмме или листайте кнопками. Под диаграммой — что происходит, что делаете вы и HTTP-трафик шага.</p>
+    <div class="viz-controls">
+      <button class="btn" id="a21-prev-dpop" type="button">← Назад</button>
+      <span class="small" id="a21-pos-dpop" aria-live="polite">Шаг 1</span>
+      <button class="btn btn-primary" id="a21-next-dpop" type="button">Вперёд →</button>
+    </div>
+    <div class="step-sticky"><span class="ss-num" id="a21-ssn-dpop">1</span><span class="ss-t" id="a21-sst-dpop"></span></div>
+    <div class="legend"><span><i></i>запрос/ответ</span><span class="warn"><i></i>атака или сбой</span><span>кружок — номер шага, клик по нему открывает пояснение</span></div>
+    <div class="dseq" id="a21-seq-dpop"></div>
+    <div id="a21-list-dpop" hidden></div>
+    <div class="card" style="margin-top:16px">
+      <h3 id="a21-dt-dpop" style="margin-top:0"></h3>
+      <p id="a21-dd-dpop"></p>
+      <p><strong>Что делаете вы (реализация):</strong></p>
+      <ul class="dyou" id="a21-dy-dpop"></ul>
+      <pre><code id="a21-dc-dpop"></code></pre>
+    </div>
+  </section>
+  <section class="panel" id="a21-p-device" role="tabpanel" hidden>
+    <h2>Device Flow — вход с устройства без браузера</h2>
+    <p class="muted small">Кликайте по шагам на диаграмме или листайте кнопками. Под диаграммой — что происходит, что делаете вы и HTTP-трафик шага.</p>
+    <div class="viz-controls">
+      <button class="btn" id="a21-prev-device" type="button">← Назад</button>
+      <span class="small" id="a21-pos-device" aria-live="polite">Шаг 1</span>
+      <button class="btn btn-primary" id="a21-next-device" type="button">Вперёд →</button>
+    </div>
+    <div class="step-sticky"><span class="ss-num" id="a21-ssn-device">1</span><span class="ss-t" id="a21-sst-device"></span></div>
+    <div class="legend"><span><i></i>запрос/ответ</span><span class="warn"><i></i>атака или сбой</span><span>кружок — номер шага, клик по нему открывает пояснение</span></div>
+    <div class="dseq" id="a21-seq-device"></div>
+    <div id="a21-list-device" hidden></div>
+    <div class="card" style="margin-top:16px">
+      <h3 id="a21-dt-device" style="margin-top:0"></h3>
+      <p id="a21-dd-device"></p>
+      <p><strong>Что делаете вы (реализация):</strong></p>
+      <ul class="dyou" id="a21-dy-device"></ul>
+      <pre><code id="a21-dc-device"></code></pre>
+    </div>
+  </section>
+  <section class="panel" id="a21-p-stepup" role="tabpanel" hidden>
+    <h2>Step-Up (RFC 9470) — повторная аутентификация с MFA</h2>
+    <p class="muted small">Кликайте по шагам на диаграмме или листайте кнопками. Под диаграммой — что происходит, что делаете вы и HTTP-трафик шага.</p>
+    <div class="viz-controls">
+      <button class="btn" id="a21-prev-stepup" type="button">← Назад</button>
+      <span class="small" id="a21-pos-stepup" aria-live="polite">Шаг 1</span>
+      <button class="btn btn-primary" id="a21-next-stepup" type="button">Вперёд →</button>
+    </div>
+    <div class="step-sticky"><span class="ss-num" id="a21-ssn-stepup">1</span><span class="ss-t" id="a21-sst-stepup"></span></div>
+    <div class="legend"><span><i></i>запрос/ответ</span><span class="warn"><i></i>атака или сбой</span><span>кружок — номер шага, клик по нему открывает пояснение</span></div>
+    <div class="dseq" id="a21-seq-stepup"></div>
+    <div id="a21-list-stepup" hidden></div>
+    <div class="card" style="margin-top:16px">
+      <h3 id="a21-dt-stepup" style="margin-top:0"></h3>
+      <p id="a21-dd-stepup"></p>
+      <p><strong>Что делаете вы (реализация):</strong></p>
+      <ul class="dyou" id="a21-dy-stepup"></ul>
+      <pre><code id="a21-dc-stepup"></code></pre>
+    </div>
+  </section>
+  <section class="panel" id="a21-p-logout" role="tabpanel" hidden>
+    <h2>Выход — RP-Initiated Logout и Back-Channel Logout</h2>
+    <p class="muted small">Кликайте по шагам на диаграмме или листайте кнопками. Под диаграммой — что происходит, что делаете вы и HTTP-трафик шага.</p>
+    <div class="viz-controls">
+      <button class="btn" id="a21-prev-logout" type="button">← Назад</button>
+      <span class="small" id="a21-pos-logout" aria-live="polite">Шаг 1</span>
+      <button class="btn btn-primary" id="a21-next-logout" type="button">Вперёд →</button>
+    </div>
+    <div class="step-sticky"><span class="ss-num" id="a21-ssn-logout">1</span><span class="ss-t" id="a21-sst-logout"></span></div>
+    <div class="legend"><span><i></i>запрос/ответ</span><span class="warn"><i></i>атака или сбой</span><span>кружок — номер шага, клик по нему открывает пояснение</span></div>
+    <div class="dseq" id="a21-seq-logout"></div>
+    <div id="a21-list-logout" hidden></div>
+    <div class="card" style="margin-top:16px">
+      <h3 id="a21-dt-logout" style="margin-top:0"></h3>
+      <p id="a21-dd-logout"></p>
+      <p><strong>Что делаете вы (реализация):</strong></p>
+      <ul class="dyou" id="a21-dy-logout"></ul>
+      <pre><code id="a21-dc-logout"></code></pre>
+    </div>
+  </section>
+  <section class="panel" id="a21-p-token" role="tabpanel" hidden>
+    <h2>Проверка access-токена — локальный JWT и introspection</h2>
+    <p class="muted small">Кликайте по шагам на диаграмме или листайте кнопками. Под диаграммой — что происходит, что делаете вы и HTTP-трафик шага.</p>
+    <div class="viz-controls">
+      <button class="btn" id="a21-prev-token" type="button">← Назад</button>
+      <span class="small" id="a21-pos-token" aria-live="polite">Шаг 1</span>
+      <button class="btn btn-primary" id="a21-next-token" type="button">Вперёд →</button>
+    </div>
+    <div class="step-sticky"><span class="ss-num" id="a21-ssn-token">1</span><span class="ss-t" id="a21-sst-token"></span></div>
+    <div class="legend"><span><i></i>запрос/ответ</span><span class="warn"><i></i>атака или сбой</span><span>кружок — номер шага, клик по нему открывает пояснение</span></div>
+    <div class="dseq" id="a21-seq-token"></div>
+    <div id="a21-list-token" hidden></div>
+    <div class="card" style="margin-top:16px">
+      <h3 id="a21-dt-token" style="margin-top:0"></h3>
+      <p id="a21-dd-token"></p>
+      <p><strong>Что делаете вы (реализация):</strong></p>
+      <ul class="dyou" id="a21-dy-token"></ul>
+      <pre><code id="a21-dc-token"></code></pre>
+    </div>
+  </section>
+  <section class="panel" id="a21-p-discover" role="tabpanel" hidden>
+    <h2>Discovery и регистрация клиента</h2>
+    <p class="muted small">Кликайте по шагам на диаграмме или листайте кнопками. Под диаграммой — что происходит, что делаете вы и HTTP-трафик шага.</p>
+    <div class="viz-controls">
+      <button class="btn" id="a21-prev-discover" type="button">← Назад</button>
+      <span class="small" id="a21-pos-discover" aria-live="polite">Шаг 1</span>
+      <button class="btn btn-primary" id="a21-next-discover" type="button">Вперёд →</button>
+    </div>
+    <div class="step-sticky"><span class="ss-num" id="a21-ssn-discover">1</span><span class="ss-t" id="a21-sst-discover"></span></div>
+    <div class="legend"><span><i></i>запрос/ответ</span><span class="warn"><i></i>атака или сбой</span><span>кружок — номер шага, клик по нему открывает пояснение</span></div>
+    <div class="dseq" id="a21-seq-discover"></div>
+    <div id="a21-list-discover" hidden></div>
+    <div class="card" style="margin-top:16px">
+      <h3 id="a21-dt-discover" style="margin-top:0"></h3>
+      <p id="a21-dd-discover"></p>
+      <p><strong>Что делаете вы (реализация):</strong></p>
+      <ul class="dyou" id="a21-dy-discover"></ul>
+      <pre><code id="a21-dc-discover"></code></pre>
+    </div>
+  </section>
+  <section class="panel" id="a21-p-par" role="tabpanel" hidden>
+    <h2>PAR — Pushed Authorization Requests (RFC 9126)</h2>
+    <p class="muted small">Кликайте по шагам на диаграмме или листайте кнопками. Под диаграммой — что происходит, что делаете вы и HTTP-трафик шага.</p>
+    <div class="viz-controls">
+      <button class="btn" id="a21-prev-par" type="button">← Назад</button>
+      <span class="small" id="a21-pos-par" aria-live="polite">Шаг 1</span>
+      <button class="btn btn-primary" id="a21-next-par" type="button">Вперёд →</button>
+    </div>
+    <div class="step-sticky"><span class="ss-num" id="a21-ssn-par">1</span><span class="ss-t" id="a21-sst-par"></span></div>
+    <div class="legend"><span><i></i>запрос/ответ</span><span class="warn"><i></i>атака или сбой</span><span>кружок — номер шага, клик по нему открывает пояснение</span></div>
+    <div class="dseq" id="a21-seq-par"></div>
+    <div id="a21-list-par" hidden></div>
+    <div class="card" style="margin-top:16px">
+      <h3 id="a21-dt-par" style="margin-top:0"></h3>
+      <p id="a21-dd-par"></p>
+      <p><strong>Что делаете вы (реализация):</strong></p>
+      <ul class="dyou" id="a21-dy-par"></ul>
+      <pre><code id="a21-dc-par"></code></pre>
+    </div>
+  </section>
+  </div>
+  <!-- ══ ГЛОССАРИЙ (вкладка, namespace a21-glos) ══ -->
+  <section class="panel" id="a21-p-glos" role="tabpanel" hidden>
+    <h2>Глоссарий — термины Auth 2.1 / OIDC</h2>
+    <p class="muted small">Все сокращения и термины из диаграмм — от токенов до эндпоинтов. Клик по «см. схему» ведёт на нужную диаграмму.</p>
+    <input type="search" id="a21-glos-q" class="glos-search" placeholder="Поиск: например, nonce, токен, PKCE, JWKS…" aria-label="Поиск по глоссарию">
+    <div id="a21-glos-count" class="small" aria-live="polite"></div>
+    <div id="a21-glos-list" class="glos-wrap"></div>
+  </section>
+  <!-- glossary: modal only (button in header) -->
+  <aside class="sidebar" id="a21-side" aria-label="Cheat Sheet: шпаргалка OIDC + PKCE Flow">
+    <div class="side-h">Cheat Sheet</div>
+    <h2 class="side-title">OIDC + PKCE Flow</h2>
+    <p class="side-lead">Современный стандарт авторизации для веб-приложений, SPA и мобильных приложений.</p>
+    <details class="acc" open>
+      <summary class="acc-btn">Зачем и как <span class="chev" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></summary>
+      <div class="acc-body">
+        <p class="side-p"><b>Зачем нужен.</b> Безопасно получает токены доступа без хранения <code>client_secret</code> на клиенте — в браузере или телефоне его невозможно скрыть.</p>
+        <p class="side-p"><b>Как работает.</b> Использует PKCE (Proof Key for Code Exchange) — динамический ключ, создаваемый на клиенте и проверяемый на сервере.</p>
+      </div>
+    </details>
+    <details class="acc" open>
+      <summary class="acc-btn">Участники (глоссарий) <span class="chev" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></summary>
+      <div class="acc-body">
+        <dl class="gl">
+          <div><dt><i class="dot" style="--c:var(--muted-fg)"></i>Браузер <span class="en">(User Agent)</span></dt><dd>Клиентское устройство пользователя.</dd></div>
+          <div><dt><i class="dot" style="--c:var(--primary)"></i>Приложение <span class="en">(RP / Relying Party)</span></dt><dd>Ваш бэкенд или SPA (фронтенд), который доверяет серверу авторизации.</dd></div>
+          <div><dt><i class="dot" style="--c:var(--accent)"></i>Сервер авторизации <span class="en">(AS / OpenID Provider)</span></dt><dd>Система проверки логина/пароля и выдачи токенов (например, Keycloak, Auth0).</dd></div>
+          <div><dt><i class="dot" style="--c:var(--green)"></i>API <span class="en">(Ресурс)</span></dt><dd>Защищённые данные и сервисы, к которым нужен доступ под токеном.</dd></div>
+        </dl>
+      </div>
+    </details>
+    <details class="acc" open>
+      <summary class="acc-btn">Ключевые параметры <span class="chev" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></summary>
+      <div class="acc-body">
+        <dl class="gl">
+          <div data-step-match="core:1 core:9"><dt><code>state</code><button class="stepgo" type="button" data-goto="core:9" aria-label="Открыть шаг 10 диаграммы «Основной вход»">→ шаг 10</button></dt><dd>Случайная строка для защиты от CSRF-атак. Генерируется в 1.2, сверяется при возврате (3.3) — не совпало → 400.</dd></div>
+          <div data-step-match="core:1 core:13"><dt><code>nonce</code><button class="stepgo" type="button" data-goto="core:13" aria-label="Открыть шаг 14 диаграммы «Основной вход»">→ шаг 14</button></dt><dd>Случайная строка для защиты от Replay Attack. Генерируется в 1.2, возвращается в ID-токене и сверяется в 5.1.</dd></div>
+          <div data-step-match="core:1 core:10"><dt><code>code_verifier</code><button class="stepgo" type="button" data-goto="core:10" aria-label="Открыть шаг 11 диаграммы «Основной вход»">→ шаг 11</button></dt><dd>Секретная строка, генерируемая клиентом (1.2), хранится в сессии, предъявляется только на /token (4.1).</dd></div>
+          <div data-step-match="core:2 core:11"><dt><code>code_challenge</code><button class="stepgo" type="button" data-goto="core:11" aria-label="Открыть шаг 12 диаграммы «Основной вход»">→ шаг 12</button></dt><dd>Хэш от <code>code_verifier</code> (S256). Уходит в /authorize (1.3), сверяется АС при обмене (4.2).</dd></div>
+        </dl>
+      </div>
+    </details>
+    <details class="acc" open>
+      <summary class="acc-btn">Структуры данных <span class="chev" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></summary>
+      <div class="acc-body">
+        <p class="side-p"><b>Authorization Code</b> <button class="stepgo" type="button" data-goto="core:6" aria-label="Открыть шаг 7 диаграммы «Основной вход»">→ шаг 7</button><br>Короткоживущая строка (1–5 минут, одноразовая). Пример:</p>
+        <div class="codeblk"><span class="codecap">code</span><button class="copybtn" type="button" aria-label="Копировать authorization code"><svg class="ic-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><svg class="ic-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg></button><code>SplxlOBeZQQYbYS6WxSbIA</code></div>
+        <p class="side-p"><b>ID Token (JWT)</b> <button class="stepgo" type="button" data-goto="core:13" aria-label="Открыть шаг 14 диаграммы «Основной вход»">→ шаг 14</button></p>
+        <div class="codeblk"><span class="codecap">json</span><button class="copybtn" type="button" aria-label="Копировать ID Token"><svg class="ic-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><svg class="ic-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg></button><code>{
+  "iss": "https://auth.example.com",
+  "sub": "1234567890",
+  "aud": "my-client-id",
+  "exp": 1698765432,
+  "iat": 1698761832,
+  "nonce": "abc123xyz"
+}</code></div>
+        <p class="side-p"><b>Access Token (JWT)</b> <button class="stepgo" type="button" data-goto="core:14" aria-label="Открыть шаг 15 диаграммы «Основной вход»">→ шаг 15</button><br>Передается в заголовке <code>Authorization: Bearer ***</code></p>
+        <div class="codeblk"><span class="codecap">json</span><button class="copybtn" type="button" aria-label="Копировать Access Token"><svg class="ic-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><svg class="ic-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg></button><code>{
+  "sub": "1234567890",
+  "scope": "openid profile email",
+  "roles": ["user", "admin"],
+  "exp": 1698765432
+}</code></div>
+      </div>
+    </details>
+    <p class="side-foot">«→ шаг N» открывает этот шаг в диаграмме «Основной вход».</p>
+  </aside>
+  </div>
+</main>
+<div class="gmodal" id="a21-gloss" role="dialog" aria-modal="true" aria-labelledby="a21-gtitle" hidden>
+  <button class="goverlay" id="a21-gclose" type="button" aria-label="Закрыть глоссарий (Esc)"></button>
+  <div class="gbox">
+    <div class="ghead">
+      <h2 id="a21-gtitle">Глоссарий терминов</h2>
+      <button class="btn btn-ghost" id="a21-gclose2" type="button" aria-label="Закрыть глоссарий">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>
+      </button>
+    </div>
+    <p class="muted small" style="margin-top:0">Все сокращения и термины из диаграмм Auth 2.1 и OIDC — от токенов до эндпоинтов. Ищите по названию или описанию.</p>
+    <input class="gsearch" id="a21-gsearch" type="search" placeholder="Поиск: PKCE, nonce, jwks_uri…" aria-label="Поиск по глоссарию" autocomplete="off">
+    <div class="gcats" id="a21-gcats" role="group" aria-label="Категории глоссария"></div>
+    <div id="a21-glist" aria-live="polite"></div>
+  </div>
+</div>
+<script>
+(function () {
+  'use strict';
+  var SVGNS = 'http://www.w3.org/2000/svg';
+  function lsGet(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
+  function lsSet(k,v){ try { localStorage.setItem(k,v); } catch(e){} }
+
+  /* ─────────── Данные диаграмм: P (участники), SUB (подписи), FLOW (стрелки), STEPS (пояснения) ─────────── */
+  function a(f, t, l, s, warn) { return { f: f, t: t, l: l, s: s, warn: !!warn }; }
+  function slf(i, l, s, warn) { return { self: i, l: l, s: s, warn: !!warn }; }
+
+  var DIAGS = {};
+
+  /* ── 1. ОСНОВНОЙ ВХОД: Authorization Code + PKCE + OIDC ── */
+  DIAGS.core = {
+    P: ['Браузер', 'Приложение (РП)', 'Сервер авторизации (АС)', 'API (ресурс)'],
+    SUB: ['пользователь', 'ваше приложение', 'Keycloak, Google…', 'данные под токеном'],
+    FLOW: [
+      { arrows: [a(0, 1, '1.1 GET /login (клик «Войти»)')] },
+      { arrows: [slf(1, '1.2 state · nonce · code_verifier → сессия')] },
+      { arrows: [a(1, 0, '1.3 302 /authorize · code_challenge (публичная)')] },
+      { arrows: [a(0, 2, '2.1 GET /authorize (scope=openid · nonce)')] },
+      { arrows: [slf(2, '2.2 сессия? нет → вход · MFA')] },
+      { arrows: [slf(2, '2.3 consent: profile + email → «Разрешить»')] },
+      { arrows: [slf(2, '2.4 code → привязка к challenge + nonce')] },
+      { arrows: [a(2, 0, '3.1 302 callback?code=…&state=…')] },
+      { arrows: [a(0, 1, '3.2 GET /callback?code&state')] },
+      { arrows: [slf(1, '3.3 сверка state ↔ сессия · нет → 400 (CSRF)')] },
+      { arrows: [a(1, 2, '4.1 POST /token (code + code_verifier)')] },
+      { arrows: [slf(2, '4.2 code single-use · SHA256(verifier)==challenge')] },
+      { arrows: [a(2, 1, '4.3 200: access · id · refresh (форма → сессия)')] },
+      { arrows: [slf(1, '5.1 jwtVerify: подпись JWKS · iss · aud · exp · nonce')] },
+      { arrows: [a(1, 3, '6.1 GET /orders · Authorization: Bearer ***')] },
+      { arrows: [slf(3, '6.2 подпись · aud · exp · scope'), a(3, 1, '200 OK · данные (JSON)')] },
+      { arrows: [a(1, 2, '7.1 POST /token (grant_type=refresh_token)')] },
+      { arrows: [a(2, 1, '7.2 новый access + новый refresh (старый мёртв)')] },
+      { arrows: [a(1, 2, '8.1 POST /revoke (refresh_token)')] },
+      { arrows: [a(0, 2, '8.2 GET /end-session?id_token_hint → сессия АС мёртва')] },
+    ],
+    STEPS: [
+  {
+    t: '1.1 · Пользователь нажимает «Войти»',
+    d: 'Клик по кнопке «Войти» — единственное действие этого шага: браузер шлёт GET /login на ваше приложение. На этом шаге не происходит ни обмена токенами, ни обращения к AS: приложение проверяет, есть ли у пользователя уже живая сессия (HttpOnly-cookie + токен в хранилище на бэкенде), и только потом решает, нужен ли вообще редирект на AS. Зачем это важно: Auth 2.1 — про поток, и запускать его повторно при уже валидной сессии лишний раз тратит код, cookie AS и сессии (риск «расщепления» сессий). Кнопка «Войти» должна быть идемпотентна: двойной клик не создаёт два потока, а второй запрос упирается в уже существующую сессию.',
+    you: ['Перед редиректом проверьте валидность текущей сессии (нет сессии → запуск потока; есть и живая → 200 сразу)', 'Делайте кнопку идемпотентной: двойной клик не создаёт второй поток (первый запрос уже открыл сессию)'],
+    c: 'GET /login\n→ 401 (сессии нет)\nWWW-Authenticate: Bearer error="invalid_token",\n  error_uri="https://as.example/oauth-error"'
+  },
+  {
+    t: '1.2 · RP генерирует «бумажки» и прячет в сессии',
+    d: 'Приложение генерирует три случайных значения и кладёт их в серверную сессию до редиректа: state (128 бит, защита от CSRF), nonce (128 бит, привязка ID-токена к этому конкретному запросу, защита от replay) и code_verifier (43–128 символов из [A-Za-z0-9-._~], RFC 7636 §4.1). Из code_verifier считается code_challenge = BASE64URL(SHA256(code_verifier)) — метод строго S256, плановый plain запрещён для всех веб-клиентов. Критично: в сессию уходит именно verifier (секрет), а в будущий URL — только challenge (публичная «половинка»). Генерация — только CSPRNG: crypto.randomBytes (Node) или crypto.getRandomValues (браузер). Math.random() запрещён — предсказуемый state/nonce = CSRF и replay на уровне протокола.',
+    you: ['Генерация: crypto.randomBytes(32) → state, nonce; verifier из базы RFC 7636 (32 байта → base64url)', 'state, nonce, verifier — в серверную сессию (HttpOnly); в URL и в frontend-хранилища — только challenge'],
+    c: '// Node: генерация до редиректа\nconst state  = crypto.randomBytes(16).toString("hex");\nconst nonce  = crypto.randomBytes(16).toString("hex");\nconst ver    = base64url(crypto.randomBytes(32)); // 43 симв.\nconst chal   = base64url(sha256(ver)); // S256\nreq.session.auth = { state, nonce, ver };'
+  },
+  {
+    t: '1.3 · 302 редирект на /authorize',
+    d: 'Приложение отвечает браузеру 302 Found, и Location — полный URL authorization_endpoint (из discovery документа AS, никогда не хардкод). В query — только ПУБЛИЧНЫЕ параметры: client_id, redirect_uri (побайтово как в регистрации AS, RFC 9700 §2.1), response_type=code, scope=openid+profile+email, state (из сессии), nonce (из сессии), code_challenge + code_challenge_method=S256. code_verifier в этом URL отсутствовать ДОЛЖЕН — это секрет шага 1.2. 302, а не 200-с-JS-редиректом: JS-редирект оставляет текущий URL в истории и логах, а 302 — стандартный механизм передачи управления браузеру.',
+    you: ['Соберите URL из discovery-метаданных, redirect_uri — побайтово как зарегистрирован (scheme, host, порт, путь, без хвостового /)', 'Проверьте свой Location перед отправкой: в нём нет code_verifier'],
+    c: '302 Found\nLocation: https://as.example/authorize\n  ?client_id=web-app-01\n  &redirect_uri=https://app.example/callback\n  &response_type=code&scope=openid+profile+email\n  &state=9f2ab7…&nonce=41c3d0…\n  &code_challenge=E9Melhoa2Owv…\n  &code_challenge_method=S256'
+  },
+  {
+    t: '2.1 · Браузер ходит на /authorize',
+    d: 'Браузер выполняет редирект и отправляет GET /authorize на AS — запрос делает браузер, не бэкенд приложения. AS получает в query всё, что приложение отправило на шаге 1.3: client_id, redirect_uri, response_type, scope, state, nonce, code_challenge, method. AS на этом шаге Ничего не шлёт приложению: он лишь записывает challenge в привязку к сессии (это потребуется на шаге 4.2). state и nonce AS намеренно не использует — он их только пересылает обратно (шаг 3.1), чтобы приложение само сверило. Если redirect_uri не совпадает с зарегистрированным побайтово — AS ответит 400 invalid_request, а не 302 с ошибкой (так предотвращается open redirect).',
+    you: ['authorization_endpoint берите из discovery, не хардкод', 'redirect_uri — побайтово как в регистрации: scheme, host, порт, путь; хвостовой «/» и query-параметры ломают совпадение'],
+    c: 'GET /authorize?client_id=web-app-01\n  &redirect_uri=https://app.example/callback\n  &response_type=code&scope=openid+profile+email\n  &state=9f2ab7…&nonce=41c3d0…\n  &code_challenge=E9Melhoa2Owv…\n  &code_challenge_method=S256  HTTP/1.1\nHost: as.example'
+  },
+  {
+    t: '2.2 · AS: проверка сессии, вход, MFA',
+    d: 'AS проверяет собственную сессию по СВОЕЙ cookie (не cookie приложения — у AS и RP разные домены, cookie друг другу не видны). Нет сессии или prompt=login → AS показывает форму входа. Пользователь вводит логин/пароль (+MFA, если включена). После успешной аутентификации AS ставит СВОЮ cookie: HttpOnly, Secure, SameSite=Lax (не None) — и записывает auth_time. auth_time позже попадёт в ID-токен и позволит приложению доказать, что пользователь аутентифицирован именно сейчас, а не 3 часа назад. Пароль в этом шаге видит только AS; приложение никогда не получает credentials — это фундаментальное разделение OAuth: RP доверяет AS как «человек этот — тот, кто он говорит».',
+    you: ['Cookie AS: HttpOnly; Secure; SameSite=Lax (не None, если cross-site не требуется)', 'Записывайте auth_time при каждой аутентификации — он нужен для step-up-логики (вкладка Step-Up)'],
+    c: 'POST /login (браузер → AS)\n→ 302 + Set-Cookie: as_session=…; HttpOnly; Secure; SameSite=Lax\nAS фиксирует auth_time=2026-11-05T12:00:00Z'
+  },
+  {
+    t: '2.3 · Экран согласия (consent)',
+    d: 'AS показывает, ЧТО именно приложение запрашивает у пользователя: список scope в человеческом виде («profile — имя и аватар; email — адрес; openid — обязательный маркер OIDC»). Пользователь принимает или отказывается. При согласии — AS запоминает решение (consent record: client_id + user + scope + время) и идёт к генерации кода. При отказе — 302 на redirect_uri с error=access_denied&state={state}: браузер всё равно уходит на callback приложения, и приложение обязан обработать error-ответ так же, как code-ответ (шаг 3.2). Consent не обязан повторяться при каждом входе (AS сам решает по политике), но для чувствительных scope (address, phone) повторный запрос — лучшая практика. «Разрешить по умолчанию» — не вариант: пользователь должен видеть, ЧТО он разрешает.',
+    you: ['Запоминайте consent в AS, но для чувствительных scope (address, phone) запрашивайте повторно или раз в 90 дней', 'Обработайте error=access_denied на callback так же, как code: сверка state обязательна'],
+    c: 'GET /authorize → (AS показывает экран)\nprofile — имя, аватар\nemail — адрес\n[ Разрешить ]  [ Отклонить ]\n— отказ → 302 https://app.example/callback\n  ?error=access_denied&state=9f2ab7…'
+  },
+  {
+    t: '2.4 · AS генерирует одноразовый code',
+    d: 'После согласия AS генерирует authorization code — случайную строку (≥128 бит энтропии) и привязывает её к конкретному набору: client_id + redirect_uri (побайтово) + code_challenge + nonce + срок жизни 60–300 секунд. Code — это НЕ токен: он не несёт данных о пользователе и не даёт доступа ни к чему. Его единственная функция — быть одноразовым «талоном», который приложение обменяет на токены по защищённому каналу (шаг 4.1). Привязка к challenge означает: этот код нельзя обменять без code_verifier, из которого challenge вычислен. Привязка к nonce означает: ID-токен, который будет выдан за этот код, будет содержать ровно тот nonce, что в запросе /authorize (защита от replay ID-токена). TTL 60–300 с: если пользователь закрыл браузер на середине, код сгорит сам.',
+    you: ['Храните code в отдельной таблице/кэше AS со ссылкой на сессию: {code, client_id, redirect_uri, challenge, nonce, exp}', 'TTL 60–300 с; после обмена — строка удаляется (single-use на уровне хранилища)'],
+    c: 'AS: codes.insert({\n  code: "SplxlOBeZQQYbYS6WxSbIA",\n  client_id: "web-app-01",\n  redirect_uri: "https://app.example/callback",\n  challenge: "E9Melhoa2Owv…",\n  nonce: "41c3d0…",\n  exp: now + 300s })'
+  },
+  {
+    t: '3.1 · AS редиректит с кодом',
+    d: 'AS отвечает браузеру 302 на redirect_uri приложения с ДВУМЯ параметрами: code (одноразовый талон) и state (то самое значение, что пришло в /authorize, без изменений). Это единственный URL-переход, в котором летит code — и он летит в адресной строке браузера, то есть потенциально попадает в историю, Referer, логи прокси. Поэтому code должен быть короткоживущим (шаг 2.4) и одноразовым (шаг 4.2). Токены в этом URL НЕТ: access_token и id_token здесь не передаются — только code. Если вместо кода AS вернул error (например, access_denied), в URL будет error=…&error_description=…&state=… — и приложение обязано это обработать (шаг 3.2). redirect_uri в 302 должен побайтово совпасть с тем, что был в /authorize, иначе AS не шлёт code вовсе (защита от open redirect).',
+    you: ['В URL — только code + state; токены никогда не летят через браузер', 'Redirect URI в 302 проверяется AS побайтово — при несовпадении code не выдаётся'],
+    c: '302 Found\nLocation: https://app.example/callback\n  ?code=SplxlOBeZQQYbYS6WxSbIA\n  &state=9f2ab7…'
+  },
+  {
+    t: '3.2 · Браузер достаёт code у RP',
+    d: 'Браузер выполняет 302 и приходит на callback приложения с GET /callback?code=…&state=…. ВНИМАНИЕ: с этого момента code находится в зоне ответственности приложения — а не AS. Всё, что приложение с ним сделает (или не сделает), — проблема приложения. Первый код в query-string означает, что code уже побывал в адресной строке, в истории браузера, в потенциальных Referer-заголовках. Задача приложения на этом шаге — немедленно забрать code из query, убрать его из URL (history.replaceState, чтобы не остался в истории), и НЕ записывать его в логи. Код живёт 60–300 секунд (шаг 2.4), поэтому обмен должен начаться сразу, а не «когда-нибудь потом». Если в query вместо code пришёл error — это тоже callback-ответ: приложение обрабатывает error и state, показывает пользователю причину (access_denied, server_error) и не пытается обменять code.',
+    you: ['Забрать code из query, history.replaceState убрать его из адресной строки', 'НЕ писать code в логи/метрики/trace — он в URL, а URL логируется везде'],
+    c: 'GET /callback?code=SplxlOBeZQQYbYS6WxSbIA&state=9f2ab7…\n// приложение:\nconst { code, state } = req.query;\n// code НЕ логируется; дальше — шаг 3.3 (state), 4.1 (обмен)'
+  },
+  {
+    t: '3.3 · ПРОВЕРКА STATE (важный шаг)',
+    d: 'Прежде чем что-либо делать с code, приложение сверяет state из URL с тем, что сгенерировало на шаге 1.2 и хранило в серверной сессии. Сравнение — по времени (timingSafeEqual), а не ===: === уязвим к timing-атакам на уровне байтов. Совпало — code «наш», поток честный, идём на шаг 4.1. НЕ совпало — это CSRF: кто-то заставил браузер пользователя пройти чужой /authorize (например, атакующий открыл ссылку со СВОИМ state и СВОИМ code, и victim-браузер принёс чужой code на callback жертвы). Приложение: 400, уничтожить сессию, НЕ обменивать code, залогировать инцидент. Этот шаг — единственная линия защиты от CSRF в OAuth: без сверки state атакующий может привязать ЧУЖУЮ учётку к СВОЕЙ сессии (login CSRF). state ≠ «красивый UUID для красоты» — это криптографическая привязка «этот code — ответ на МОЙ запрос».',
+    you: ['Сравнение: crypto.timingSafeEqual(Buffer.from(a), Buffer.from(b)) — никогда ===', 'Mismatch → 400 + destroy session + лог инцидента; code НЕ обменивается'],
+    c: 'const ok = crypto.timingSafeEqual(\n  Buffer.from(req.query.state),\n  Buffer.from(req.session.auth.state));\nif (!ok) { req.session.destroy(); return 400; }\n// ок → код «наш», идём на /token'
+  },
+  {
+    t: '4.1 · RP шлёт POST /token с верификером',
+    d: 'Приложение (бэкенд, НЕ браузер) делает server-to-server POST на token_endpoint по TLS. В body (application/x-www-form-urlencoded): grant_type=authorization_code, code (из callback), redirect_uri (то же самое, что в /authorize — AS сверит), code_verifier (из сессии, НЕ из query — verifier не должен никуда «уходить» после сессии). Аутентификация клиента: по Auth 2.1 для конфиденциальных клиентов — private_key_jwt или mTLS (client_secret в POST body не рекомендуется; см. вкладку «Авторизация клиента»). Таймаут — 10 секунд: если AS не ответил, запрос повторяется, но code уже может быть использован (single-use), поэтому повтор — только после явной 4xx/5xx, а не по таймауту слепым. Этот канал (бэкенд → AS) — отдельный от канала браузера: здесь нет cookie AS, нет пользователя, только клиент и его аутентификация.',
+    you: ['POST body: grant_type, code, redirect_uri, code_verifier; Content-Type: application/x-www-form-urlencoded', 'client_auth: private_key_jwt (заголовок Authorization) или mTLS; таймаут 10 с; повтор — только по явной 4xx, не по таймауту'],
+    c: 'POST /token  HTTP/1.1\nHost: as.example\nContent-Type: application/x-www-form-urlencoded\nAuthorization: Bearer <JWT-assertion>\n\ngrant_type=authorization_code\n&code=SplxlOBeZQQYbYS6WxSbIA\n&redirect_uri=https://app.example/callback\n&code_verifier=dbBgzZ1…zP5bFg'
+  },
+  {
+    t: '4.2 · AS валидирует: single-use + PKCE',
+    d: 'AS выполняет ТРИ проверки перед выдачей токенов, и каждая — атомарна: (1) code существует, не истёк (TTL 60–300 с) и не использован — AS АТОМАРНО удаляет строку code из хранилища (DELETE WHERE code=… AND used=0; affected rows = 1 — только тогда продолжаем; это и есть single-use на уровне БД). (2) client, который пришёл (по assertion/mTLS) — тот самый client_id, к которому code был привязан на шаге 2.4. (3) SHA256(code_verifier из запроса) == code_challenge из привязки — это PKCE-проверка (RFC 7636 §4.6): без секретного verifier challenge не перебрать (SHA256 — односторонняя, 256 бит). Любая из трёх сбоев → 400 с конкретным error (invalid_grant, invalid_client, или 400 с описанием) и токены НЕ выдаются. Повторное использование code (та же строка, уже использованная) — красный флаг: AS обязан отозвать ВСЕ токены, уже выданные по этому code (reuse detection, как в refresh-ротации).',
+    you: ['DELETE … WHERE code=… AND used=0 — атомарно; affected rows=1 → продолжаем', 'SHA256(verifier) == challenge (RFC 7636 §4.6); reuse code → revoke всех токенов по этому code'],
+    c: 'AS: 1) code: exists? exp? → DELETE (atomic)\n    2) client_id == привязка?\n    3) sha256(verifier) == challenge?\n— всё ок → 200 + токены\n— сбой → 400 { "error": "invalid_grant" }'
+  },
+  {
+    t: '4.3 · RP получает токены и сохраняет',
+    d: 'AS отвечает 200 с JSON: access_token, id_token, refresh_token, token_type=Bearer, expires_in (обычно 300–3600 с), scope (то, что реально выдано — может быть уже запрошенного). Приложение обязано проверить: (1) статус 200 (не 204/302 — если AS вернул не 200 с телом, это ошибка интеграции), (2) ВСЕ три токена на месте (если refresh_token не дали, а заявлен — разбирать: scope без offline_access?), (3) expires_in записать — это триггер для refresh (шаг 7.1). Хранение: серверная сессия (HttpOnly) или шифрованное хранилище; localStorage и не-HttpOnly cookie — запрещены (XSS заберёт токены). access_token — для API (шаг 6.1), id_token — для проверки личности (шаг 5.1), refresh_token — для обновления (шаг 7.1). Токены НЕ отправляются в браузер: браузеру нужен только «вы вошли» (cookie сессии приложения).',
+    you: ['Проверьте 200 + наличие access/id/refresh; запишите expires_in как триггер refresh', 'Храните в HttpOnly-сессии/шифрованном хранилище; localStorage и не-HttpOnly — запрещены'],
+    c: '200 OK\n{\n "access_token": "eyJhbG…J9",\n "id_token": "eyJhbG…QzI5",\n "refresh_token": "M42dG6…",\n "expires_in": 3600,\n "token_type": "Bearer",\n "scope": "openid profile email" }'
+  },
+  {
+    t: '5.1 · Проверка подписи и клеймов ID-токена',
+    d: 'ID-токен — JWT, который AS подписал СВОИМ приватным ключом. Приложение проверяет его ЛОКАЛЬНО (без обращения к AS): (1) подпись — публичным ключом из JWKS AS (см. вкладку «Проверка токена»), kid из заголовка JWT выбирает ключ; (2) alg — белый список RS256/ES256, alg=none ОТКЛОНЯТЬ (классическая уязвимость); (3) iss == issuer из discovery (не «похожий» домен, а побайтово); (4) aud содержит client_id приложения; (5) exp > now (с допуском на clock skew 30 с); (6) iat <= now + skew; (7) nonce == nonce из шага 1.2 (защита от replay ID-токена: подделанный/перехваченный ID-токен из ЧУЖОГО потока не пройдёт по nonce). После успешной проверки приложение извlecает из payload: sub (идентификатор пользователя в AS), email, name, picture, auth_time, amr, acr, sid. Это и есть «профиль пользователя» — всё, что приложение знает о человеке, придёт из ID-токена. Подпись гарантирует: это именно AS подписал, и payload не менялся.',
+    you: ['jwtVerify: подпись (JWKS, по kid) + iss (побайтово) + aud (содержит client_id) + exp/iat (skew 30 с) + nonce', 'alg — белый список RS256/ES256; none → отклонить'],
+    c: '// jose (Node)\nconst { payload, header } = await jwtVerify(\n  idToken, jwksClient(discovery.jwks_uri), {\n   issuer: discovery.issuer,\n   audience: "web-app-01",\n   algorithms: ["RS256","ES256"],\n   nonce: req.session.auth.nonce });\n// payload.sub, .email, .name, .auth_time, .sid'
+  },
+  {
+    t: '6.1 · Запрос данных с access-токеном',
+    d: 'Приложение (или фронтенд от имени приложения, если API публичный) делает GET к API-ресурсу с заголовком Authorization: Bearer {access_token}. По RFC 6750 токен передаётся ТОЛЬКО в этом заголовке: в query-параметре (?token=…) — нельзя (попадёт в логи, историю, Referer), в форме — нельзя, в кукке — нельзя. API на этом шаге не знает, КТО пользователь: для API access_token — не «человек», а «набор разрешений (scope), привязанный к client и, если есть, к user». Приложение уже проверило id_token (шаг 5.1) и знает sub; API проверит свой участок: подпись (если API != AS и токен JWT — по JWKS), aud (содержит ли API в aud), exp, scope (хватает ли на операцию). Если токен в query — API обязан отклонить (RFC 6750 §2.3: resource server MAY reject).',
+    you: ['Только Authorization: Bearer <token>; query/форма/cookie — недопустимы (RFC 6750 §2.3)', 'Если API ≠ AS и AT — JWT: проверяйте подпись по JWKS + aud + exp + scope'],
+    c: 'GET /orders  HTTP/1.1\nHost: api.example\nAuthorization: Bearer eyJhbG…J9\nAccept: application/json'
+  },
+  {
+    t: '6.2 · API проверяет токен и отвечает',
+    d: 'API-ресурс выполняет проверку входящего access_token: (1) если токен JWT и API ≠ AS — подпись публичным ключом из JWKS AS (kid из заголовка); (2) iss == AS; (3) aud содержит identifier API (аудитория — «для кого выдан»); (4) exp > now; (5) scope покрывает операцию (GET /orders требует scope=orders:read). Всё совпало — 200 с данными. Любое несоответствие — 401 с заголовком WWW-Authenticate: Bearer error="invalid_token" (RFC 6750 §3): этот заголовок — стандартный способ сказать клиенту «токен невалиден, вот почему». error может быть invalid_token (подпись/exp/aud), insufficient_scope (не хватает scope), invalid_request. Клиент по 401 + WWW-Authenticate понимает: пора на refresh (шаг 7.1), а не показывать пользователю «ошибка». API НЕ обращается к AS на каждый запрос (если токен JWT) — всё локально по JWKS; это и есть производительность stateless-проверки.',
+    you: ['Проверка на КАЖДОМ эндпоинте: подпись + iss + aud + exp + scope', '401 + WWW-Authenticate: Bearer error="invalid_token" (RFC 6750 §3)'],
+    c: '200 OK\nContent-Type: application/json\n{\n "orders": [\n  {"id": 1001, "item": "…", "total": 1290 },\n  {"id": 1002, "item": "…", "total": 450 } ]\n}\n// при сбое: 401\n// WWW-Authenticate: Bearer error="invalid_token"'
+  },
+  {
+    t: '7.1 · Запрос обновления (refresh)',
+    d: 'access_token живёт 300–3600 с (expires_in из шага 4.3). Приложение заранее (за 30 с до exp) или по 401 от API (шаг 6.2) инициирует refresh: POST /token с grant_type=refresh_token + refresh_token (из хранилища) + аутентификация клиента (private_key_jwt / mTLS). Это тот же endpoint и тот же канал, что и шаг 4.1 — server-to-server, без браузера, без пользователя. Критично: refresh_token — в body, не в query (как и любой токен). Автоматический retry — ОДНА попытка: если refresh вернул 400 (refresh_token expired/invalid) — это не «попробовать ещё раз», а «сессия мертва, нужен полный вход» (шаг 1.1). Зацикливание на refresh (retry loop) — классический баг: приложение бесконечно шлёт мёртвый refresh, пользователь видит спиннер. Правило: один refresh-запрос → 200 (новые токены) или 4xx (полный выход + «вход просрочен»).',
+    you: ['Триггер: exp − 30 с (проактивно) ИЛИ 401 от API (реактивно); ОДНА попытка', '4xx на refresh → полный выход + «вход просрочен»; не зацикливаться'],
+    c: 'POST /token  HTTP/1.1\nContent-Type: application/x-www-form-urlencoded\nAuthorization: Bearer <JWT-assertion>\n\ngrant_type=refresh_token\n&refresh_token=M42dG6…'
+  },
+  {
+    t: '7.2 · Новая пара токенов (rotation)',
+    d: 'AS по валидному refresh_token выдаёт НОВУЮ пару: новый access_token + НОВЫЙ refresh_token, и старый refresh_token мгновенно АННУЛИРУЕТСЯ (rotation — ротация, обязательная по лучшей практике Auth 2.1). Приложение ЗАМЕНЯЕТ refresh_token в хранилище на новый ДО отправки следующего запроса (порядок: сохрани новый → потом работай). Старый refresh после ротации мёртв: если он вдруг придёт на /token повторно — это либо баг клиента (двойной запрос), либо атака (украденный старый refresh). AS фиксирует reuse: если refresh_token, который уже был ротирован, приходит снова — AS отзывает ВСЮ цепочку (все токены сессии, включая свежий), потому что либо клиент сломан, либо токен украден. Это «reuse detection» — та же логика, что и single-use для code (шаг 4.2). Пользователь не замечает ротацию: для него «я всё ещё вошёл». Для безопасности — каждый refresh сужает окно жизни украденного токена.',
+    you: ['Замените refresh_token в хранилище ДО следующего запроса; старый — мёртв', 'Reuse ротированного refresh → AS отзывает всю цепочку (см. вкладку Refresh-ротация)'],
+    c: '200 OK\n{\n "access_token": "eyJhbG…NEW2",\n "refresh_token": "M42dG6…NEW2",\n "expires_in": 3600,\n "token_type": "Bearer" }\n// старый refresh_token с этого момента невалиден'
+  },
+  {
+    t: '8.1 · Отзыв токенов (revoke)',
+    d: 'Приложение (или пользователь — «выйти») вызывает RFC 7009: POST /revoke с token (refresh_token, который отзываем) + token_type_hint=refresh_token + аутентификация клиента. AS аннулирует токен: он больше не пройдёт на /token (refresh) и, если AT тоже в цепочке, — на API. Критичное поведение RFC 7009: AS отвечает 200 OK даже если токен уже невалиден или неизвестен — это намеренно, чтобы не раскрывать атакующему, существует ли токен. Поэтому 200 ≠ «точно отозвал», а «принято, проверять не будем». Порядок вызовов при выходе: revoke ДО очистки сессии приложения (если сначала очистить сессию — потеряем refresh_token и не сможем отозвать). Отзыв refresh_token ломает цепочку: после revoke нельзя refresh (шаг 7.1), и следующий вход — полный (шаг 1.1). access_token живёт до exp (если не отозван отдельно): по RFC 6750 resource server МОЖЕТ, но не обязан проверять отозванность AT на каждый запрос — на практике AT сгорит по exp (300–3600 с).',
+    you: ['POST /revoke: token + token_type_hint + client_auth; 200 даже на невалидный (RFC 7009)', 'Порядок: revoke → потом чистить сессию приложения (иначе потеряете refresh)'],
+    c: 'POST /revoke  HTTP/1.1\nContent-Type: application/x-www-form-urlencoded\nAuthorization: Bearer <JWT-assertion>\n\ntoken=M42dG6…\n&token_type_hint=refresh_token\n→ 200 OK (даже если токен неизвестен)'
+  },
+  {
+    t: '8.2 · Завершение сессии у AS (end_session)',
+    d: 'После revoke (шаг 8.1) приложение завершает сессию на стороне AS — это Single Logout: пользователь выходит из приложения, и его сессия в AS тоже гаснет (иначе cookie AS живёт, и следующий вход на любое RP этого AS — без пароля). Механика: браузер делает GET на end_session_endpoint AS с id_token_hint (ID-токен, который AS выдал ЭТОМУ пользователю в ЭТОЙ сессии — AS по нему находит сессию) + post_logout_redirect_uri (куда вернуть браузер после — должен быть предзарегистрирован в AS, иначе AS не редиректит). AS гасит свою сессию (удаляет cookie as_session) и редиректит на post_logout_redirect_uri. Порядок с приложением: приложение чистит СВОЮ сессию (cookie) ДО редиректа на AS — иначе после возврата на app.example cookie приложения ещё жива, и пользователь «входит» мгновенно, хотя AS его уже выгнал. id_token_hint — именно из ТЕКУЩЕЙ сессии (не из кэша, не из другой): AS привязывает logout к конкретному ID-токену.',
+    you: ['GET end_session?id_token_hint={текущий}&post_logout_redirect_uri={зарегистрированный}', 'Чистите cookie приложения ДО редиректа на AS; id_token_hint — из текущей сессии'],
+    c: 'GET /end-session?id_token_hint=eyJhbG…QzI5\n  &post_logout_redirect_uri=https://app.example/bye\n→ AS: сессия AS уничтожена, cookie as_session удалена\n→ 302 https://app.example/bye'
+  }
+  ]
+  };
+
+  /* ── 2. PKCE: защита от перехвата/injection code ── */
+  DIAGS.pkce = {
+    P: ['Браузер', 'Приложение (РП)', 'Сервер авторизации (АС)'],
+    SUB: ['SPA / mobile', 'ваше приложение', 'Keycloak…'],
+    FLOW: [
+      { arrows: [a(0, 1, '«Войти»'), slf(1, 'verifier = random(43–128), challenge = S256(verifier)')] },
+      { arrows: [a(1, 0, '302 /authorize?code_challenge=S256(…)')] },
+      { arrows: [slf(2, 'сохранить challenge в сессию code')] },
+      { arrows: [a(2, 0, '302 /callback?code=…'), slf(0, '⚠ перехватчик видит code')] },
+      { arrows: [a(1, 2, 'POST /token (code + code_verifier)')] },
+      { arrows: [slf(2, 'S256(verifier) == challenge?  ✓ → 200 токены')] },
+      { arrows: [slf(0, '⚠ перехватчик шлёт code без verifier'), slf(2, 'S256(?) != challenge → invalid_grant ✗')] },
+    ],
+    STEPS: [
+  {
+    t: 'Генерация пары verifier / challenge',
+    d: 'Одно действие одного актора: приложение генерирует code_verifier — случайную строку 43–128 символов из алфавита [A-Z a-z 0-9 - . _ ~] (RFC 7636 §4.1, генерация только CSPRNG). Из него считается code_challenge = BASE64URL(ASCII(SHA256(ASCII(code_verifier)))) — детерминированно, один и тот же verifier всегда даёт один challenge. Это «двухполовинка»: verifier — секрет, остаётся на бэкенде; challenge — публичная хеш-«отпечатка», которую можно смело показать. Метод обязателен S256: plain (challenge = verifier) запрещён Auth 2.1, потому что в plain перехвативший challenge перехватил и сам секрет. Зачем: код (code) летит через браузер — незащищённый канал; PKCE делает его бесполезным без verifier.',
+    you: ['Генерация: 32 байта crypto.randomBytes → base64url (43 символа) — хватает и в verifier, и как энтропийный минимум RFC', 'plain запрещён: method строго S256'],
+    c: 'verifier  = DB7gj0s2kD-s41AroUIphRi7gD72JFPDTrNpT4U4JSU\nchallenge = BASE64URL(SHA256(verifier))\n        = E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM'
+  },
+  {
+    t: 'Challenge — в /authorize',
+    d: 'Одно действие: приложение добавляет ДВА параметра к URL /authorize — code_challenge (публичная половинка) и code_challenge_method=S256. ВНИМАНИЕ: code_verifier в этот URL НЕ попадает — он уже лежит в серверной сессии (см. Основной вход, шаг 1.2). В URL-параметрах только то, что можно показать: challenge безопасен, потому что из него verifier не восстановить (SHA256 — односторонняя, 256 бит — перебор невозможен). Браузер может этот URL видеть, записывать в историю, слать в Referer — challenge от этого не теряет свойств. AS запомнит challenge и на этом шаге ещё ничего не проверяет: он просто фиксирует «для этого клиента, с этим redirect_uri, этот challenge заявлен».',
+    you: ['code_challenge + code_challenge_method=S256 — в query /authorize; verifier — только в сессии бэкенда'],
+    c: 'GET /authorize?…&code_challenge=E9Melhoa2Owv…\n  &code_challenge_method=S256\n  (code_verifier в URL отсутствует)'
+  },
+  {
+    t: 'AS привязывает challenge к code',
+    d: 'Одно действие: после входа пользователя и согласия AS генерирует одноразовый code и привязывает к нему challenge, который пришёл в /authorize. Привязка — в хранилище AS: {code, client_id, redirect_uri, challenge, nonce, exp}. С этого момента code «знает», какой challenge на него заявлен: обменять этот code можно будет только предъявив verifier, чей SHA256 совпадёт с challenge. Это и есть суть PKCE: код становится привязанным не только к клиенту (client_id), но и к «владельцу verifier». Пока пользователь ходил через браузер, challenge уже зафиксирован на стороне AS — перехватить код и обменять его без verifier нельзя.',
+    you: ['Храните привязку {code → challenge} до обмена; TTL 60–300 с'],
+    c: 'AS: codes[code] = {\n  challenge: "E9Melhoa2Owv…",\n  client_id: "web-app-01",\n  exp: now + 300s }'
+  },
+  {
+    t: 'Возврат code — и перехват в канале',
+    d: 'Два события: (1) AS редиректит браузер на callback приложения с code + state — код оказывается в адресной строке; (2) ⚠ АТАКА: перехватчик (зловредный сайт на том же устройстве, кэш прокси, история браузера, Referer в логи) забирает этот code и пробует обменять его первым — до того, как честное приложение. Именно этот сценарий PKCE и закрывает: до Auth 2.0/PKCE перехватчик с кодом получал токены легально. Теперь у перехватчика есть code, но НЕТ verifier, а AS потребует его на обмене (шаг 6). Код живёт 60–300 секунд — окно атаки узкое, и оно закрыто.',
+    you: ['Код в URL = публичная зона; безопасность держится не на «коде не должны увидеть», а на отсутствии verifier у сторонних'],
+    c: '⚠ перехватчик видит:\nGET /callback?code=SplxlOBeZQQYbYS6WxSbIA&state=…\nи пытается: POST /token (code=…, verifier=??? )'
+  },
+  {
+    t: 'Честный обмен: code + verifier',
+    d: 'Одно действие: приложение бэкенда (server-to-server, TLS) шлёт POST /token с code И code_verifier из СВОЕЙ сессии. verifier приходит по закрытому каналу (бэкенд → AS), не через браузер, и AS получает его впервые. Приложение предъявляет code «открывающим ключом»: сам код — публичная половина, verifier — секретная. Если бы код уже поменял перехватчик (шаг 4) — он не сможет выполнить этот шаг: у него нет verifier.',
+    you: ['POST /token: grant_type=authorization_code + code + code_verifier (из сессии, не из query)'],
+    c: 'POST /token\ngrant_type=authorization_code\n&code=SplxlOBeZQQYbYS6WxSbIA\n&code_verifier=DB7gj0s2kD-s41…'
+  },
+  {
+    t: 'AS проверяет PKCE и выдаёт токены',
+    d: 'Одно действие: AS вычисляет SHA256(verifier из запроса), кодирует в base64url и сравнивает с сохранённым challenge. Совпало — токены: 200 {access_token, id_token, refresh_token}. Не совпало (верификер чужой, отсутствует или битый) — 400 invalid_grant (RFC 7636 §4.6), и код сгорает. Проверка атомарна вместе с single-use: строка code удаляется при обмене. Если верификер не совпал, но code был «наш» — это признак атаки или бага: логировать как инцидент.',
+    you: ['SHA256(verifier) == challenge → 200 + токены; иначе 400 invalid_grant (RFC 7636 §4.6)'],
+    c: 'AS: base64url(sha256("DB7gj0…")) == "E9Melhoa2Owv…"? → да\n→ 200 { access_token, id_token, refresh_token }'
+  },
+  {
+    t: 'Атака перехватчика: code без verifier',
+    d: '⚠ Итог атаки из шага 4: перехватчик добрался к /token со СВОИМ client-аутентификатором (если это публичный клиент с тем же client_id) и кодом, но предъявить verifier не может: (1) SHA256 переобратимо не восстановить (256 бит), (2) у него нет сессии приложения, где лежит verifier. AS отвечает 400 invalid_grant и код сгорает (single-use): честное приложение, даже придя позже с верным verifier, уже не обменяет — но это корректная защита, а не баг: приложение начнёт вход заново. Итог: украденный код бесполезен. Это и есть весь смысл PKCE в одном кадре.',
+    you: ['Поведение AS: без верного verifier — 400, код сгорает; приложение при 400 invalid_grant на обмене — полный повтор входа'],
+    c: '⚠ POST /token (code=SplxlO…, verifier=нет)\n→ 400 { "error": "invalid_grant" }\nкод сгорел; честный обмен невозможен — повтор входа'
+  }
+  ]
+  };
+
+  /* ── 3. АВТОРИЗАЦИЯ КОНФИДЕНЦИАЛЬНОГО КЛИЕНТА: private_key_jwt и mTLS ── */
+  DIAGS.client = {
+    P: ['Приложение (РП)', 'Сервер авторизации (АС)', 'Хранилище ключей'],
+    SUB: ['ваше приложение', 'Keycloak…', 'Vault / KMS'],
+    FLOW: [
+      { arrows: [slf(0, 'генерация пары ключей (RSA/EC), pub → JWKS'), a(0, 2, 'pub key → secret manager / client metadata')] },
+      { arrows: [a(0, 1, 'POST /token + client_assertion=JWT (прив. ключ)')] },
+      { arrows: [a(1, 2, 'получить pub ключ клиента (jwks_uri)')] },
+      { arrows: [slf(1, 'подпись ✓ · iss=sub=client_id · aud=/token · exp<10м · jti новый')] },
+      { arrows: [a(1, 0, '200 токены (client auth пройден)')] },
+    ],
+    STEPS: [
+  {
+    t: 'Генерация пары ключей вместо client_secret',
+    d: 'Одно действие: при регистрации конфиденциального клиента в AS вместо симметричного client_secret генерируется АСИММЕТРИЧНАЯ пара: приватный ключ (никогда не покидает бэкенд приложения) и публичный. Публичный загружается в AS (в запись клиента: jwks_uri или jwks inline). Зачем: client_secret — симметричный секрет: любой, кто его увидит (лог, переменная окружения, инцидент на бэкенде), становится этим клиентом. При RSA/EC-паре украсть «доступ» через публичную часть нельзя: подпись делает только приватный ключ. Auth 2.1 (RFC 9700 §8) не рекомендует client_secret для серверных приложений, где есть надёжный способ аутентификации (ключ, mTLS).',
+    you: ['Пара: EC P-256 (или RS 2048+); приватный — только в HSM/секрет-менеджере приложения', 'Публичный — в AS: jwks_uri или jwks inline в записи клиента'],
+    c: 'openssl ecparam -name prime256v1 -genkey -noout > client_priv.pem\nopenssl ec -in client_priv.pem -pubout > client_pub.pem\n# client_pub → AS (jwks)'
+  },
+  {
+    t: 'JWT-assertion вместо client_secret',
+    d: 'Одно действие: на каждом обращении к /token и /revoke приложение строит JWT-assertion (client assertion) и кладёт его в Authorization: Bearer <assertion>. Заголовок: {alg: ES256, typ: "JWT", kid: …}. Payload ОБЯЗАН содержать: iss = client_id, sub = client_id, aud = token_endpoint AS, exp (≤10 минут от подписания), iat. Подпись — приватным ключом клиента (SHA256 → ECDSA при ES256). Это «письмо-доверенность, подписанное личным ключом клиента»: AS видит не «пароль», а подписанный документ. TTL 10 минут — стандарт: assertion не должен жить, и повторное использование одной подписи через 10 минут = красный флаг (anti-replay).',
+    you: ['Claims: iss=sub=client_id, aud=token_endpoint, exp ≤ 10 мин, iat; подпись ES256/RS256', 'Authorization: Bearer <JWT-assertion> вместо Basic/secret в body'],
+    c: '{\n "alg": "ES256", "typ": "JWT", "kid": "key-2026-11"\n}\n{\n "iss": "web-app-01", "sub": "web-app-01",\n "aud": "https://as.example/token",\n "exp": 1762362000, "iat": 1762359600\n}\n<подпись ECDSA-SHA256 приватным ключом>'
+  },
+  {
+    t: 'AS берёт публичный ключ клиента',
+    d: 'Одно действие: AS получает assertion и берёт ПУБЛИЧНЫЙ ключ клиента — из записи клиента (jwks inline) или по jwks_uri, кэшируя (аналогично JWKS, вкладка «Проверка токена»). kid из заголовка JWT выбирает конкретный ключ (клиент может ротировать). Ключ не приходит «в запросе» — он из хранилища AS, загруженный при регистрации/обновлении клиента. Если kid не найден в JWKS — 401 invalid_client (и опционально один retry после refresh JWKS на случай ротации). Публичный ключ не секрет: его можно показать, а вот подписанный assertion — нет, потому что подпись не подделать без приватного ключа.',
+    you: ['JWKS клиента: из jwks inline или jwks_uri, с кэшем; выбор по kid', 'Неизвестный kid → 401 (допустим один retry после обновления JWKS)'],
+    c: 'AS: GET https://app.example/.well-known/jwks.json\n→ { "keys": [{ "kid": "key-2026-11", "kty": "EC", … }] }'
+  },
+  {
+    t: 'Проверка JWT: подпись + claims + anti-replay',
+    d: 'Одно действие (атомарно): AS проверяет assertion целиком: (1) подпись публичным ключом (по kid); (2) alg — белый список ES256/RS256, none отклонить; (3) iss == sub == client_id из запроса; (4) aud == token_endpoint; (5) exp/iat — живые, exp − iat ≤ 10 минут. Всё совпало — клиент аутентифицирован, запрос обрабатывается дальше (exchange, refresh, revoke). Любое отклонение — 401 invalid_client с error_description. Anti-replay: assertion с одним iat/exp не должен приниматься дважды (опционально: хранение отпечатка assertion на TTL). Ключевой эффект: secret не передаётся вообще — передаётся ДОКАЗАНИЕ владения приватным ключом.',
+    you: ['Проверки: подпись + alg-белый список + iss/sub/aud + exp/iat (окно ≤ 10 мин)', '401 invalid_client; опционально — хранение отпечатка assertion для anti-replay'],
+    c: 'AS: verify(assertion, pubKey(kid)) → ok\n   iss == sub == "web-app-01"? → да\n   aud == token_endpoint? → да\n   exp > now, exp-iat ≤ 600s? → да\n→ клиент аутентифицирован'
+  },
+  {
+    t: 'Альтернатива: mTLS (RFC 8705) без секрета и без JWT',
+    d: 'Одно действие: вместо JWT-assertion клиент аутентифицируется САМ TLS-рукопожатием: бэкенд предъявляет клиентский сертификат, и AS сверяет его (subject/SAN) с client_id. Спецификация RFC 8705: в запросе /token добавляется client_assertion_type=urn:ietf:params:oauth:client-assertion-type:mtls_client_auth + client_assertion=<hash> (SHA256-хеш сертификата, base64url — для корреляции). Секретов нет: и симметричного, и подписного — доверие держится на PKI (сертификат выдан доверенным CA или проверен по цепочке AS). Плюсы: ноль «секретов к хранению», нулевые JWT-окна replay; минусы: инфраструктура сертификатов, ротация — через CA/ACME. Для on-prem и меж-сервисных сценариев — часто лучший выбор.',
+    you: ['Сертификат клиента: в HSM/кэше TLS; AS проверяет цепочку + subject → client_id', 'RFC 8705: client_assertion_type=…:mtls_client_auth + client_assertion=base64url(SHA256(сертификат))'],
+    c: 'POST /token (TLS + клиентский сертификат)\nclient_assertion_type=\n  urn:ietf:params:oauth:client-assertion-type:mtls_client_auth\n&client_assertion=P0A5Zk4…\n→ AS: сертификат → subject CN=web-app-01 → ok'
+  }
+  ]
+  };
+
+  /* ── 4. REFRESH-РОТАЦИЯ И REUSE DETECTION ── */
+  DIAGS.refresh = {
+    P: ['Приложение (РП)', 'Сервер авторизации (АС)', 'Злоумышленник'],
+    SUB: ['ваше приложение', 'Keycloak…', 'перехватчик'],
+    FLOW: [
+      { arrows: [a(0, 1, 'POST /token (refresh=R1)'), a(1, 0, 'access=A2 + refresh=R2 (R1 мёртв)')] },
+      { arrows: [slf(0, 'хранить R2, забыть R1')] },
+      { arrows: [a(2, 1, '⚠ украденный R1 снова на /token', 1)] },
+      { arrows: [slf(1, 'R1 в reuse-реестре → DETECTED: компрометация')] },
+      { arrows: [slf(1, 'отозвать ВСЕ токены клиента (каскад)'), a(1, 0, 'invalid_grant + сессия пользователя сбита')] },
+    ],
+    STEPS: [
+  {
+    t: 'Первый refresh: R1 → R2 (rotation)',
+    d: 'Одно действие: приложение шлёт POST /token с grant_type=refresh_token + refresh_token=R1. AS проверяет: R1 жив (не отозван, не истёк), клиент — тот, кому R1 выдан. Всё ок — AS выдаёт НОВУЮ пару: access_token (новый) и refresh_token=R2, и в том же атомарном действии АННУЛИРУЕТ R1 (маркировка used/rotated). Ротация — не опция, а обязательная практика Auth 2.1: каждый refresh «сдвигает» секрет, и окно жизни украденного R1 заканчивается в момент выдачи R2. Ответ 200 {access_token, refresh_token: R2, …}. Пользователь не замечает: сессия продолжается.',
+    you: ['Ротация обязательна: старый refresh аннулируется в момент выдачи нового', 'Порядок AS: атомарно «выдать R2 + пометить R1 мёртвым» (одна транзакция)'],
+    c: 'POST /token\ngrant_type=refresh_token&refresh_token=***\n→ 200 { access_token: A2, refresh_token: R2 }\n// R1 с этого момента невалиден'
+  },
+  {
+    t: 'RP хранит только свежий refresh',
+    d: 'Одно действие: приложение ЗАМЕНЯЕТ refresh_token в хранилище: R2 записывается, R1 удаляется (не «остаётся рядом»). Критично: хранилище держит ОДИН актуальный refresh на сессию, и запись атомарна (нет окна «оба есть»). Откуда это берётся: если R1 физически остался где-то (кэш, лог, реплика БД с задержкой), приложение может случайно послать R1 повторно — и AS сочтёт это reuse (шаг 3), даже если это не атака, а баг репликации. Поэтому — один refresh на сессию, атомарная замена, и refresh никогда не пишется в логи (он токен, и в URL он тоже не появляется — только в body POST).',
+    you: ['Атомарная замена в хранилище: R2 записан, R1 удалён; ровно один refresh на сессию', 'Refresh — только в body POST; не в URL, не в логи, не в кэш-слои с задержкой'],
+    c: 'storage.refreshToken(sessionId) = R2  // атомарно\n// R1 в хранилище больше нет'
+  },
+  {
+    t: 'Атака: украденный R1 повторно',
+    d: '⚠ Одно событие: злоумышленник, у которого есть COPIЯ R1 (утёк через XSS на фронтенде, лог, дам БД, реплика), шлёт POST /token с grant_type=refresh_token + refresh_token=R1 — тот же запрос, что и у честного приложения на шаге 1. С точки зрения AS: приходит refresh, который УЖЕ ротирован (R1 → R2 на шаге 1). Это и есть сигнал компрометации: честный клиент после ротации R1 не использует (шаг 2), поэтому любое появление R1 — либо украденная копия, либо критический баг. AS на этом шаге ЕЩЁ НЕ выдаёт токены — он переходит в режим обнаружения (шаг 4). Поведение «просто отказать 400» — недостаточное: злоумышленник узнаёт, что R1 «уже использован», и не получает доказательств атаки.',
+    you: ['Любое повторное использование ротированного refresh — сигнал компрометации, а не «просто ошибка»'],
+    c: '⚠ POST /token (злоумышленник)\ngrant_type=refresh_token&refresh_token=***\n// AS: R1 уже ротирован в R2 → тревога'
+  },
+  {
+    t: 'Обнаружение: AS фиксирует компрометацию',
+    d: 'Одно действие: AS выполняет reuse detection: помечает ВСЮ цепочку refresh-токенов сессии как скомпрометированную и отзывает: R2 (актуальный, у честного клиента), все доступные access_token сессии, и сам R1. Логика: мы не знаем, у кого R1, но знаем, что у НЕГО. А R2 у того, кто его получил, — а это может быть и тот же злоумышленник (если R1 украли и обменяли раньше, чем честный клиент). Поэтому отзывается ВСЁ: и «старое», и «новое». Записывается инцидент (timestamp, client_id, session, R1/R2 id) — для расследования. Это не «ошибка 400»: это событие безопасности.',
+    you: ['Reuse → отозвать ВСЮ цепочку: актуальный refresh + все access сессии + сам повторный токен', 'Инцидент в SIEM: кто, когда, какой refresh повторили'],
+    c: 'AS: reuse(R1) →\nrevoke(R2), revoke(access-токены сессии), mark(session=compromised)\nlog incident {t, client, session, tokens:[R1,R2,A2]}'
+  },
+  {
+    t: 'Итог: и злоумышленник, и честный клиент — вне',
+    d: 'Два исхода из шага 4: (1) злоумышленник получил 400 invalid_grant (R1 мёртв, цепочка мёртва); (2) честное приложение при следующем запросе получит 401 от API (access отозван) → попытка refresh → R2 тоже мёртв → 400 → полное завершение сессии, пользователь видит «вход просрочен, войдите снова». Итог: ни одна сторона с украденным refresh-токеном не работает дальше. Стоимость для честного пользователя — один повторный вход (и MFA, если включена). Стоимость для атакующего — нулевой доход: токены мёртвы, а след в SIEM есть. Это и есть «reuse detection + каскадный отзыв» — защита уровня сессии, а не токена.',
+    you: ['Честный клиент: 401 API → refresh 400 → полный выход + «вход просрочен» (без retry-loop)', 'Инцидент: один повторный вход для пользователя vs. нулевой доход для атакующего'],
+    c: 'честный: GET /orders → 401\n → POST /token (R2) → 400 invalid_grant\n → сессия завершена, «Войдите снова»\n⚠ атакующий: 400 invalid_grant (R1 мёртв)'
+  }
+  ]
+  };
+
+  /* ── 5. DPoP: sender-constrained токены ── */
+  DIAGS.dpop = {
+    P: ['Приложение (РП)', 'Сервер авторизации (АС)', 'API (ресурс)', 'Злоумышленник'],
+    SUB: ['ваше приложение', 'Keycloak…', 'данные под токеном', 'перехватчик TLS'],
+    FLOW: [
+      { arrows: [slf(0, 'DPoP-ключ: EC P-256 (jkt = thumbprint)')] },
+      { arrows: [a(0, 1, 'POST /token + header DPoP: proof{htu,htm,jti,ath=S256(code)}')] },
+      { arrows: [slf(1, 'proof ✓ · ath=S256(code) ✓ · jkt из pub key в proof'), a(1, 0, 'access_token (token_type: DPoP, cnf.dpop_jkt=jkt)')] },
+      { arrows: [a(0, 2, 'GET /orders + Authorization: DPoP <AT> + DPoP: proof{htu,htm,jti}')] },
+      { arrows: [slf(2, 'подпись proof ✓ · jkt == cnf.dpop_jkt ✓ → 200')] },
+      { arrows: [a(3, 2, '⚠ украденный AT + СВОЙ proof (чужой jkt)', 1), slf(2, 'jkt ≠ cnf.dpop_jkt → 401 ✗')] },
+    ],
+    STEPS: [
+  {
+    t: 'DPoP-ключ клиента',
+    d: 'Одно действие: приложение генерирует АСИММЕТРИЧНУЮ пару (EC P-256 или RS2048) — это DPoP-ключ, который делает access_token привязанным к конкретному отправителю (sender-constrained). Публичная часть — в JWT «proof of possession» (DPoP proof), который приложение будет подписывать к каждому запросу. Ключ НЕ загружается в AS как jwks (в отличие от client keys, вкладка «Авторизация клиента»): AS видит его только внутри proof, в поле jkt (Thumbprint — SHA256-отпечаток DER публичного ключа, base64url, RFC 7638). Зачем: access_token по-прежнему «бумажка, которую можно перехватить» — DPoP делает её бесполезной без КЛЮЧА: токен и ключ — две половины одной пары.',
+    you: ['Пара EC P-256 (или RS 2048); приватный — в HSM приложения', 'jkt = base64url(SHA256(DER публичного ключа)) — RFC 7638; ключ не загружается в AS как JWKS'],
+    c: 'genkey pair (P-256) → priv, pub\njkt = base64url(sha256(DER(pub))) = "16a0…de0c"\n// priv — в HSM; pub — только внутри proof'
+  },
+  {
+    t: 'Proof на /token: привязка к code через ath',
+    d: 'Одно действие: при обмене code на /token приложение строит DPoP proof (JWT) и кладёт его в заголовок DPoP: <proof>. Proof обязателен содержать: jti (уникальный, anti-replay), iat, htu (target URI — token_endpoint), htm (HTTP-метод — POST), ath (Authorization Request Hash — base64url(SHA256(ASCII(«канонического» URL-запроса /authorize с code в query))) — RFC 9449 §4.2). Подпись — DPoP-ключом (ES256). ath — это «привязка» proof к конкретному code-запросу: proof, подписанный для одного /authorize, не сработает для другого. Клиент также шлёт HTTP-заголовок DPoP-Nonce (если AS его вернул в 401) — дополнительный anti-replay.',
+    you: ['Proof: jti + iat + htu + htm + ath; подпись DPoP-ключом (ES256)', 'ath = base64url(SHA256(канонический /authorize URL с code)) — RFC 9449 §4.2', 'Заголовок: DPoP: <proof> (отдельно от Authorization)'],
+    c: 'DPoP: eyJhbG…<proof>\nclaims: { jti: "u1k2…", iat: 1762360000,\n  htu: "https://as.example/token",\n  htm: "POST",\n  ath: "jH2l…",  // SHA256(/authorize?…&code=SplxlO…)\n  jkt: "16a0…de0c" }\n+ Authorization: Bearer <JWT-assertion> (client auth)'
+  },
+  {
+    t: 'AS валидирует proof и выдаёт sender-constrained токен',
+    d: 'Одно действие: AS проверяет proof: (1) подпись публичным ключом (из proof, по jkt); (2) htu == token_endpoint, htm == POST; (3) ath == SHA256(code-запроса, который AS обрабатывает); (4) jti не повторен (anti-replay). Всё ок — AS выдаёт токены, и access_token получает claim cnf = { "dpop_jkt": "16a0…de0c" } — привязку к DPoP-ключу. С этого момента access_token — не «просто JWT с claims», а «JWT, который работает только при предъявлении proof с jkt=16a0…de0c». refresh_token — не привязывается (он и так на бэкенде, и proof на /token тоже шлётся). Итог: даже перехватив access_token, атакующий не предъявит к нему proof (нет приватного DPoP-ключа).',
+    you: ['CNF-claim: cnf.dpop_jkt = jkt из proof', 'Проверки proof: подпись + htu/htm + ath + jti (anti-replay)'],
+    c: '200 OK\n{\n "access_token": "eyJhbG…cnf…",\n  // payload: { …, "cnf": { "dpop_jkt": "16a0…de0c" } },\n "refresh_token": "M42dG6…",\n "expires_in": 3600 }'
+  },
+  {
+    t: 'Запрос к RS: токен + свежий proof',
+    d: 'Одно действие: приложение делает GET /orders к API с ДВУМЯ заголовками: (1) Authorization: Bearer <access_token> — как обычно (RFC 6750); (2) DPoP: <новый proof> — подписанный DPoP-ключом, с htu=/orders, htm=GET, jti (новый, не из /token). Proof НЕ переиспользуется: на каждый запрос — новый jti, iat. ath здесь НЕ нужен (это не /token-обмен) — он нужен только для привязки к code. API не знает, «что это за proof» до проверки — для API это ещё один заголовок. Ключевой момент: access_token и proof — ДВЕ РАЗНЫЕ ВЕЩИ: токен — права, proof — доказательство владения ключом. У атакующего может быть токен, но не будет proof.',
+    you: ['Каждый запрос: Authorization: Bearer <AT> + DPoP: <новый proof (jti, iat, htu, htm)>', 'Proof не переиспользуется: новый jti на каждый запрос'],
+    c: 'GET /orders\nAuthorization: Bearer eyJhbG…cnf…\nDPoP: eyJhbG…<proof>\nclaims: { jti: "x9p2…", iat: 1762360030,\n  htu: "https://api.example/orders",\n  htm: "GET",\n  jkt: "16a0…de0c" }'
+  },
+  {
+    t: 'RS: jkt == cnf.dpop_jkt — 200',
+    d: 'Одно действие: API проверяет: (1) access_token валиден (подпись, iss, aud, exp — как в Основном входе шаг 6.2); (2) НОВОЕ: cnf.dpop_jkt из access_token == jkt из proof — «ключ, которым подписан proof, тот самый, к которому привязан токен»; (3) proof подписан публичным ключом из jkt; (4) htu == URL запроса, htm == метод; (5) jti не повторен. Всё совпало — 200 с данными. Если cnf.dpop_jkt != jkt — 401 invalid_token: «токен привязан к другому ключу». Это и есть sender-constrained проверка: токен и ключ — неразделимая пара.',
+    you: ['Проверка RS: AT валиден + cnf.dpop_jkt == jkt(proof) + подпись proof + htu/htm + jti', 'Несоответствие jkt → 401 invalid_token'],
+    c: 'API: AT ok (подпись/iss/aud/exp)\n    cnf.dpop_jkt == "16a0…de0c"? → да\n    proof.jkt == "16a0…de0c"? → да\n    sig(proof, pub(jkt)) ok? → да\n→ 200 { "orders": […] }'
+  },
+  {
+    t: 'Атака: украденный AT без DPoP-ключа',
+    d: '⚠ Итог: атакующий перехватывает access_token (в логах, кэше, референсере) и шлёт GET /orders с Authorization: Bearer <украденный AT>. Но: (1) у него нет DPoP-ключа (он в HSM приложения), (2) он не может подписать proof с jkt, соответствующим cnf.dpop_jkt. Варианты: (a) без заголовка DPoP — API требует proof (401, если AT имеет cnf); (b) со СВОИМ proof (своё jkt) — cnf.dpop_jkt != jkt → 401 invalid_token; (c) подделать подпись — невозможно без приватного ключа. Итог: украденный access_token бесполезен — это и есть цель DPoP (RFC 9449): «токен без ключа = мёртвый».',
+    you: ['Атакующий с AT, но без DPoP-ключа: 401 в любом из трёх вариантов (нет proof / чужой jkt / поддельная подпись)'],
+    c: '⚠ GET /orders\nAuthorization: Bearer <украденный AT>\nDPoP: <чужой proof, jkt="ff99…">  // не тот\n→ 401 { "error": "invalid_token" }\n   // cnf.dpop_jkt != jkt(proof)'
+  }
+  ]
+  };
+
+  /* ── 6. DEVICE FLOW: устройства без браузера ── */
+  DIAGS.device = {
+    P: ['Устройство (CLI / ТВ)', 'Сервер авторизации (АС)', 'Браузер', 'Пользователь'],
+    SUB: ['ограниченный ввод', 'Keycloak…', 'второе устройство', 'человек'],
+    FLOW: [
+      { arrows: [a(0, 1, 'POST /device_authorization (client_id, scope)'), a(1, 0, 'device_code · user_code=ABCD-EFGH · interval=5')] },
+      { arrows: [a(3, 2, 'ввести ABCD-EFGH на verification_uri'), slf(1, 'ждём confirmation (TTL ~10 мин)')] },
+      { arrows: [a(0, 1, 'POST /token (device_code) — поллинг раз в interval'), a(1, 0, '400 authorization_pending — ещё ждём')] },
+      { arrows: [slf(3, '⚠ polling чаще, чем interval'), a(0, 1, 'POST /token (device_code)'), a(1, 0, '400 slow_down — увеличить интервал')] },
+      { arrows: [a(2, 1, '⚠ user_code НЕ тем аккаунтом / отказ', 1), a(1, 0, '400 user_denied / wrong_user / expired_token — стоп')] },
+      { arrows: [slf(1, 'подтверждено → токены'), a(1, 0, '200 access + refresh (device_code одноразовый)')] },
+    ],
+    STEPS: [
+  {
+    t: 'Запрос device-авторизации',
+    d: 'Одно действие: устройство без браузера (CLI, ТВ, IoT) шлёт POST на device_authorization_endpoint AS: client_id (и аутентификация клиента, если конфиденциальный) + scope. Ответ — 200 с ТРЁМ значениями: device_code (код для подтверждения — держит устройство, НО его показывают/вводят с другого устройства… точнее — устройство показывает user_code), user_code (короткий человекочитаемый код, который пользователь введёт в браузере на другом устройстве, формат XXXX-XXXX), verification_uri (https://as.example/activate — куда пойти), verification_uri_complete (с user_code в query — если AS поддерживает), expires_in (обычно 600 с), interval (минимальный период поллинга, обычно 5 с). Зачем flow: нет браузера на устройстве → нет callback → код «подтверждают» извне. Критично: user_code показываемому человеку, device_code — только устройству и AS; device_code НИКОГДА не показывается пользователю (он длинный, и его ввод в браузер — риск).',
+    you: ['Ответ: device_code (устройству) + user_code (человеку) + verification_uri + expires_in + interval', 'device_code не показывать пользователю; user_code — короткий, формат XXXX-XXXX'],
+    c: 'POST /device_authorization\nclient_id=tv-app-01&scope=openid+profile\n→ 200 {\n "device_code": "GSArRw…",\n "user_code": "ABCD-2345",\n "verification_uri": "https://as.example/activate",\n "verification_uri_complete": "…/activate?code=ABCD-2345",\n "expires_in": 600,\n "interval": 5 }'
+  },
+  {
+    t: 'Пользователь подтверждает на втором устройстве',
+    d: 'Два действия (пользователь + AS): (1) человек открывает verification_uri на ТЕЛЕФОНЕ/НОУТБУКЕ и вводит user_code; (2) AS проверяет user_code (он жив — не истёк, не использован), запускает вход: сессия? нет → форма логина + MFA (обязательно, потому что вход идёт с НОВОГО устройства, доверие не переносится). После успешной аутентификации AS помечает device_code как approved (не выдаёт токены сразу — устройство их ещё не запросило). Устройство на этом шаге Ничего не делает: оно ждёт и опрашивает (шаг 3). Состояние «approved» существует у AS, и только подтверждённый user_code + device_code пара даст токены.',
+    you: ['Вход с нового устройства = полная аутентификация (MFA по политике AS)', 'AS помечает device_code=approved; токены ещё НЕ выдаёт'],
+    c: 'браузер (телефон): GET https://as.example/activate\n→ введите код: ABCD-2345\n→ логин + MFA → 200 «Готово, можно закрыть»\nAS: device_code(GSArRw…) = approved'
+  },
+  {
+    t: 'Поллинг: device_code на /token',
+    d: 'Одно действие (цикл): устройство каждые `interval` секунд (5 с из ответа) шлёт POST /token: grant_type=urn:ietf:params:oauth:grant-type:device_code + device_code + client_id (+ аутентификация клиента). AS отвечает по одной из четырёх: (1) authorization_pending — «ещё не подтвердили, ждите» (устройство ждёт interval и повторяет); (2) slow_down — «часто опрашивает» (устройство ждёт interval+5); (3) expired_token — device_code истёк (600 с прошло без подтверждения) — стоп, начать заново; (4) 200 с токенами — подтверждение произошло. Это единственный flow, где «ответ = продолжить ждать» является нормой: authorization_pending НЕ ошибка. Поллинг — по interval, не «как можно чаще»: AS следит (slow_down).',
+    you: ['Поллинг строго по interval; authorization_pending — норма, не ошибка; stopped на expired_token', 'Три стоп-состояния: expired_token, wrong_user, user_denied — дальше не опрашивать'],
+    c: 'POST /token\nclient_id=tv-app-01\n&grant_type=urn:ietf:params:oauth:grant-type:device_code\n&device_code=GSArRw…\n→ 400 { "error": "authorization_pending" }\n   // ждём interval=5s → повтор'
+  },
+  {
+    t: 'Сбой: слишком частый поллинг → slow_down',
+    d: 'Одно действие: устройство шлёт поллинг чаще, чем interval (например, каждый 1 с — «чтобы быстрее»). AS отвечает slow_down — это НЕ ошибка, а регулировка: устройство обязано увеличить паузу до interval + 5 с (10 с) и продолжать. Зачем: device flow — единственный, где «опрашивать до успеха» заложен в протокол, и без slow_down устройство бы молотило /token с частотой 1 req/s, а с тысячами устройств — DoS на самый уязвимый endpoint. Поведение устройства: при slow_down — пауза 10 с, затем normal. Если slow_down повторяются — устройство «сломано» (interval не читает): логировать. Это единственный «сбой» в flow, который исправляется увеличением паузы, а не повтором входа.',
+    you: ['slow_down → пауза interval+5 (10 с) → продолжить; это регулировка, не ошибка'],
+    c: 'POST /token (device_code, слишком часто)\n→ 400 { "error": "slow_down" }\n// устройство: sleep(10s) → повтор'
+  },
+  {
+    t: 'Сбой: wrong_user / user_denied',
+    d: 'Два терминальных исхода (устройство перестаёт опрашивать): (1) user_denied — пользователь открыл verification_uri, ввёл user_code, но нажал «Отклонить» (не разрешил доступ). (2) wrong_user — пользователь подтвердил кодом, но вошёл в AS под ДРУГОЙ учёткой, чем та, к которой device_code «привязан» по политике (например, tenant-привязка: device_code выдан для tenant A, пользователь вошёл в tenant B). Оба — 400 с конкретным error, и устройство останавливает поллинг: повтор с тем же device_code бесполезен (он уже «сгорел» в терминальном состоянии). Что делает устройство: показывает «Доступ не разрешён» (user_denied) или «Неправильный аккаунт — попробуйте снова» (wrong_user) и предлагает начать заново (новый device_code).',
+    you: ['user_denied / wrong_user → стоп поллинга; новое device_code при повторе'],
+    c: 'POST /token (device_code)\n→ 400 { "error": "access_denied" }  // user_denied\n→ 400 { "error": "authorization_pending",\n        "error_description": "wrong account" } // wrong_user\n// устройство: стоп, показать причину, «Повторить?»'
+  },
+  {
+    t: 'Успех: токены, device_code сгорел',
+    d: 'Одно действие: AS подтверждает (шаг 2), устройство опрашивает (шаг 3) → AS отвечает 200 с токенами (access, id, refresh — как в Основном входе 4.3). Атомарно с выдачей AS АННУЛИРУЕТ device_code: повторный поллинг с ним → expired_token (code single-use, как authorization code). Устройство: (1) сохраняет токены (HttpOnly/шифрованное хранилище); (2) проверяет id_token (подпись, iss, aud, exp, nonce — но в device flow nonce обычно нет, т.к. нет /authorize-запроса: проверяйте sub + auth_time); (3) стоп поллинга, работа с API. Окно «подтвердил, но устройство не забрало» закрыто expires_in: если устройство не пришло за 600 с — device_code мёртв, подтверждение не выдаст токенов никому.',
+    you: ['200 + токены → device_code мёртв (single-use); id_token проверить (sub, auth_time); стоп поллинга'],
+    c: 'POST /token (device_code)\n→ 200 { "access_token": "…", "id_token": "…",\n        "refresh_token": "…", "expires_in": 3600 }\nAS: device_code(GSArRw…) = consumed\n// повтор: 400 expired_token'
+  }
+  ]
+  };
+
+  /* ── 7. STEP-UP: повторная аутентификация с MFA ── */
+  DIAGS.stepup = {
+    P: ['Браузер', 'Приложение (РП)', 'Сервер авторизации (АС)', 'API (ресурс)'],
+    SUB: ['пользователь', 'ваше приложение', 'Keycloak…', 'данные под токеном'],
+    FLOW: [
+      { arrows: [a(3, 0, 'GET /sensitive-op'), slf(0, '⚠ require_step_up=true в /authorize')] },
+      { arrows: [a(0, 2, 'GET /authorize?prompt=login&max_age=0&require_step_up=true')] },
+      { arrows: [slf(2, 'MFA: TOTP / push / hardware key')] },
+      { arrows: [a(2, 0, '302 /callback?code=… (id_token с auth_time, acr)')] },
+      { arrows: [slf(0, 'проверить: auth_time свежий? acr ∈ {s256, s356}?  ✓'), a(1, 3, 'Authorization: Bearer <AT> (scope includes sensitive)')] },
+    ],
+    STEPS: [
+  {
+    t: 'Требование step-up: приложение требует MFA',
+    d: 'Одно действие: приложение запрашивает у AS усиление: на обычном «я в сессии» запросе (например, запуск /authorize для чувствительной операции) приложение добавляет prompt=login (или require_max_age=300 — «аутентификации должно быть не больше 5 минут», или prompt=select_account для переключения). Механика: AS видит, что обычная сессия (password-только) НЕДОСТАТОЧНА для запрошенного уровня → запускает step-up: MFA-фактор (TOTP/SMS/push) поверх живой сессии. Зачем отдельно от полного входа: пользователь уже вошёл (пароль) — заставлять повторять логин не нужно, НО для «вывести 100 000» нужно доказать, что это человек, а не сессия, украденная через XSS. step-up = «докажи ещё раз, но только MFA-фактором». Результат step-up виден в ID-токене: amr (methods: ["pwd","mfa"]) и acr (level), и auth_time обновляется.',
+    you: ['prompt=login / require_max_age=N — «требуется свежая/усиленная аутентификация»', 'Результат — в ID-токене: amr (pwd, mfa), acr (уровень), auth_time (обновлён)'],
+    c: 'GET /authorize?…&prompt=login&require_max_age=300\n// AS: сессия есть (pwd), но step-up (mfa) требуется'
+  },
+  {
+    t: 'AS запрашивает MFA',
+    d: 'Одно действие: AS показывает MFA-шаг поверх СУЩЕСТВУЮЩЕЙ сессии: «Подтвердите TOTP-код / Push-уведомление». Пользователь подтверждает. AS: (1) обновляет сессию — добавляет mfa в список методов (amr: pwd+mfa), обновляет auth_time (или mfa_time — отдельный клейм); (2) повышает acr сессии до уровня, требующего MFA. Пароль НЕ запрашивается снова: сессия «парольная» уже есть, добавляется «MFA-слой». Это и есть step-up, а не полный вход: один фактор (MFA), не два (password+MFA). После step-up сессия AS — «усиленная»: любые /authorize с require_max_age=300 пройдут без повторного MFA в пределах окна. Если MFA не подтвердили (таймаут, 3 ошибки кода) — access_denied, sессия остаётся «неусиленной».',
+    you: ['MFA поверх сессии (не password+MFA); amr += mfa, auth_time обновлён', 'Таймаут/3 ошибки кода → access_denied; сессия неусиленной'],
+    c: 'AS: [MFA-экран] введите 6-значный код\n→ TOTP ok\nsession.amr = ["pwd","mfa"]; session.auth_time = now\nsession.acr = "urn:mfa"'
+  },
+  {
+    t: 'Валидация step-up на стороне RP',
+    d: 'Одно действие: приложение ПОЛУЧИЛО ID-токен после /authorize и ПРОВЕРЯЕТ, что step-up реально произошёл: (1) amr содержит "mfa" (не только "pwd"); (2) auth_time (или mfa_time) — свежий (в пределах require_max_age); (3) acr — уровень, который приложение требует для ЭТОЙ операции. Проверка на стороне RP ОБЯЗАТЕЛЬНА: AS может быть настроен «мягко» (step-up не требовать), и тогда ответственность на RP. Если amr=_pwd-only при требовании MFA — операция ЗАПРЕЩЕНА: 403 + «Требуется подтверждение». Критично: step-up — это свойство СЕССИИ AS + требования RP, и проверять «свежесть» должен RP: AS не обязан помнить, для какой операции был step-up (AS не знает, что «это вывод денег»).',
+    you: ['RP проверяет amr⊇mfa + auth_time ≤ require_max_age + acr ≥ требуемый', 'Не совпало → 403 + «требуется подтверждение» (не «ошибка»)'],
+    c: 'const ok = payload.amr.includes("mfa")\n  && (now - payload.auth_time) <= 300;\nif (!ok) return 403 { "error": "step_up_required" };'
+  },
+  {
+    t: 'Работа с привилегированными операциями',
+    d: 'Одно действие: операция с проверенным step-up выполняется (например, вывод средств, изменение email, удаление аккаунта). Приложение привязывает ПОЛИТИКУ step-up к операциям, а не к сессии: «чтение профиля — достаточно pwd; смена email — pwd+mfa ≤ 5 мин; вывод — pwd+mfa ≤ 60 с». Механика: перед привилегированным действием приложение сверяет ID-токен/сессию с политикой: достаточно свежий MFA? да → операция; нет → новый /authorize с require_max_age=N (шаг 1) → MFA (шаг 2) → операция. Пользователь видит: «Подтвердите, чтобы продолжить» — без полного пере-входа. Это UX-выигрыш step-up: не «выйдите и войдите снова с MFA», а «подтвердите одним фактором». Окна (300 с / 60 с) — политика приложения, не AS: AS только «отвечает» на require_max_age.',
+    you: ['Политика per-операция: чтение — pwd; смена email — mfa ≤ 300s; вывод — mfa ≤ 60s', 'Недостаточно → /authorize с require_max_age (не полный пере-вход)'],
+    c: 'policy["withdraw"] = { amr: ["pwd","mfa"], max_age: 60 };\n// проверка перед операцией:\nif (now - session.mfa_time > 60) → step-up (шаг 1)'
+  },
+  {
+    t: 'Исход step-up: когда MFA НЕ требуется',
+    d: 'Два исхода (симметрия шага 3): (1) amr содержит mfa И auth_time свежий (в пределах require_max_age) → операция выполняется БЕЗ повторного MFA (пользователь не видит запрос — step-up уже есть). (2) Сессия вообще без MFA, НО операция — низкорисковая (чтение профиля, просмотр заказов) → MFA не требуется: amr=pwd достаточно, require_max_age не ставится. Критично: step-up — НЕ «MFA на всё». Политика: низкий риск — pwd; средний — mfa ≤ 300s; высокий — mfa ≤ 60s. Если требовать MFA на каждый клик — пользователь отключит 2FA (реальный сценарий: friction → disable). Метрика: доля операций с step-up vs. без — если > 30% — политика слишком жёсткая, UX деградирует.',
+    you: ['МFA НЕ требуется: (a) свежий step-up есть; (b) операция низкорисковая', 'Политика по рискам: pwd / mfa≤300s / mfa≤60s; не «MFA на всё»'],
+    c: 'GET /profile (чтение) → amr=pwd достаточно → 200\nGET /orders (средний) → mfa ≤ 300s? → да → 200\nPOST /withdraw (высокий) → mfa ≤ 60s? → нет → step-up'
+  }
+  ]
+  };
+
+  /* ── 8. СЕССИИ И ВЫХОД: sid, front- и back-channel logout ── */
+  DIAGS.logout = {
+    P: ['Приложение A (РП)', 'Сервер авторизации (АС)', 'Приложение B (РП)', 'Браузер'],
+    SUB: ['портал', 'Keycloak…', 'другое приложение', 'пользователь'],
+    FLOW: [
+      { arrows: [a(3, 0, 'login → 302 /callback (sid=S-1 в IDT)'), slf(0, 'сессия: sid=S-1 (httpOnly cookie)')] },
+      { arrows: [a(0, 1, 'GET /session?sid=S-1 (session-check)'), slf(1, 'sid жива? ✓ (или logout URL в body)')] },
+      { arrows: [a(3, 0, 'GET /logout (пользователь кликнул «Выйти»)'), a(0, 1, 'end_session_endpoint?id_token_hint&post_logout&state')] },
+      { arrows: [a(1, 3, '302 post_logout_redirect_uri (чистый браузер)')] },
+      { arrows: [a(1, 2, '⚠ back-channel: POST { sid, sub } на logout_uris', 1), slf(2, 'сверка sig/sid/sub → уничтожить свою сессию')] },
+    ],
+    STEPS: [
+  {
+    t: 'Сессия со sid: одна личность, один идентификатор',
+    d: 'Одно действие: AS выдаёт ID-токен, и в нём — claim sid (session ID, RFC 7800 / OIDC Session Management). sid — уникальный идентификатор СЕССИИ AS (не пользователя, не токена): одна вошедшая личность в один момент = один sid. Все ID-токены, выданные в рамках этой сессии (любому RP), содержат ОДИН и тот же sid. Зачем: без sid приложение не может ответить на вопрос «сессия AS ещё жива?» (ID-токен живёт до exp, но пользователь мог выйти из AS — exp этого не знает). sid — «ручка», по которой приложение спрашивает AS о состоянии сессии (шаг 2) и по которой AS понимает, ЧТО именно логировать (back-channel, шаг 4). Критично: sid НЕ секрет — он в ID-токене (публичная часть JWT), это идентификатор, не токен доступа.',
+    you: ['sid — в ID-токене; одна сессия AS = один sid для всех RP', 'sid не секрет (в публичном payload JWT)'],
+    c: 'ID-токен payload: {\n "sub": "user-123", "sid": "sess-9f2ab7",\n "auth_time": 1762360000, … }'
+  },
+  {
+    t: 'Проверка жизни сессии (front-channel, /session endpoint)',
+    d: 'Одно действие: приложение периодически (или при каждом «важном» переходе) проверяет, жива ли сессия AS: POST на session_check / introspection с sid (+ аутентификация клиента, если endpoint защищённый). AS отвечает: { active: true } — сессия жива; { active: false } — пользователь вышел (или сессия истекла). Механика: приложение НЕ логает пользователя локально — оно спрашивает AS «он ещё там?». Зачем front-channel: back-channel (шаг 4) — push от AS (AS сам сообщает), front-channel — pull от приложения (приложение спрашивает). Оба нужны: push — мгновенно, но требует от AS хранить подписки и шифровать; pull — приложение контролирует частоту, но не мгновенно. Для большинства RP достаточно pull по sid (интроспекция), push — для «мгновенного» logout (банки, админки).',
+    you: ['GET/POST session-check с sid → { active: true|false }', 'pull (приложение спрашивает) vs. push (AS сообщает) — разные механизмы'],
+    c: 'POST /session/check\nsession_id=sess-9f2ab7&client_id=web-app-01\n→ 200 { "active": false }  // пользователь вышел из AS'
+  },
+  {
+    t: 'Front-channel logout: пользователь кликнул «Выйти»',
+    d: 'Два действия (пользователь + браузер): (1) пользователь в приложении нажимает «Выйти»; (2) приложение чистит СВОЮ сессию (cookie, токен в хранилище) и редиректит браузер на end_session_endpoint AS с id_token_hint (ID-токен ТЕКУЩЕЙ сессии — AS по нему находит sid) + post_logout_redirect_uri (предзарегистрированная, куда вернуть). AS: (1) находит сессию по id_token_hint (sid), (2) УНИЧТОЖАЕТ её (все токены сессии мёртвы: AT, RT, и другие ID-токены с тем же sid), (3) 302 на post_logout_redirect_uri. Итог: пользователь вышел из AS — и из приложения. Но: только из ЭТОГО приложения (front-channel = «один браузер, один RP»). Чтобы выйти из ВСЕХ RP — нужен back-channel (шаг 4).',
+    you: ['Чистим СВОЮ сессию → GET end_session?id_token_hint=…&post_logout_redirect_uri=…', 'AS находит сессию по sid (из id_token_hint) и уничтожает её'],
+    c: 'GET /end-session?id_token_hint=eyJhbG…\n  &post_logout_redirect_uri=https://app.example/bye\nAS: sid(sess-9f2ab7) → revoke all → 302 app.example/bye'
+  },
+  {
+    t: 'Back-channel logout: AS сам сообщает всем RP',
+    d: 'Одно действие: AS (после уничтожения сессии — front-channel из шага 3, или админ/истечение) шлёт POST logout-notification на registered back_channel_logout_uri каждого RP, которому выдавал токен с этим sid. Тело: logout_token — JWT, подписанный AS, payload: sid, sub, events={oidc:logout}, jti (unique, anti-replay). Аутентификация: подписью logout_token (не client_secret). RP: (1) проверяет подпись (JWKS AS), iss, aud (содержит client_id RP), jti не повторен, (2) находит сессию по sid, (3) уничтожает ЕЁ (локально), (4) 204. Итог: пользователь вышел из AS → все RP, где он был, «узнают» и выгонят его. Критично: RP обязан обработать logout_token как событие безопасности (проверки как на ID-токене), а не «просто POST». Без back-channel — пользователь «выходит» из AS, но в 5 открытых вкладках 5 приложений он «всё ещё вошёл».',
+    you: ['AS → POST back_channel_logout_uri (каждый RP): logout_token (JWT: sid, sub, events.oidc:logout, jti)', 'RP: подпись + iss + aud + jti → сессию по sid → уничтожить → 204'],
+    c: 'POST https://app.example/back-logout\nContent-Type: application/x-www-form-urlencoded\nlogout_token=eyJhbG…\n  // payload: { "sid": "sess-9f2ab7", "sub": "user-123",\n  //   "events": { "oidc:logout": { "at": 1762360300 } },\n  //   "jti": "u1x2…" }\n→ RP: verify → kill session(sid) → 204'
+  },
+  {
+    t: 'Почему нужны ОБА канала',
+    d: 'Два канала решают разные задачи, и ни один без другого не покрывает сценарий: FRONT-channel (шаг 3) — «я (пользователь в браузере) вышел из ЭТОГО приложения и из AS». Мгновенно, без инфраструктуры, но «одно приложение на один браузер». BACK-channel (шаг 4) — «AS сказал: сессия мёртва, все RP, выгнать». Мгновенно для всех RP, но требует: у AS — хранить подписки (какие RP, какие uri), шифровать/подписывать; у RP — endpoint + проверки logout_token. Матрица: (a) пользователь вышел в приложении → front-channel (AS + это приложение); чтобы выгнать из остальных RP — back-channel; (b) админ отозвал сессию в AS (без браузера) → ТОЛЬКО back-channel (front-channel не работает — нет браузера); (c) сессия истекла по таймауту в AS → back-channel. Итог: front — UX (один клик), back — безопасность (все RP синхронизированы). Production: ОБА.',
+    you: ['Front = «я вышел» (UX, один браузер); Back = «сессия мёртва для всех» (безопасность, все RP)', 'Админ-отзыв / таймаут → только back-channel'],
+    c: 'front: 1 браузер → 1 RP + AS\nback:  AS → N RP (все сессии по sid)\nproduction: оба канала активны'
+  }
+  ]
+  };
+
+  /* ── 9. JWT-СТЕК: структура, подпись, JWKS, ротация ── */
+  DIAGS.token = {
+    P: ['Сервер авторизации (АС)', 'Приложение (РП)', 'JWKS', 'Злоумышленник'],
+    SUB: ['издатель', 'проверяет подпись', '/jwks.json', 'без ключа'],
+    FLOW: [
+      { arrows: [slf(0, 'IDT = header.payload.signature (RS256)'), a(0, 1, 'выдать id_token (подписан прив. ключом kid=k1)')] },
+      { arrows: [a(1, 2, 'GET /.well-known/jwks.json (по kid=k1)'), a(2, 1, '[{ kid:k1, n, e, use:sig }]')] },
+      { arrows: [slf(1, 'sig ✓ (RSA) · iss ✓ · aud ✓ · exp ✓ · nonce ✓')] },
+      { arrows: [slf(0, 'ротация: новый ключ kid=k2, k1 ещё жив (overlap)')] },
+      { arrows: [a(1, 2, '⚠ unknown kid=k2 → refresh JWKS', 1), a(2, 1, '[{ kid:k1 }, { kid:k2 }]')] },
+      { arrows: [a(3, 1, '⚠ подделка: JWT без подлинного ключа', 1), slf(1, 'sig ✗ (публичный ключ не подтверждает) → 401')] },
+    ],
+    STEPS: [
+  {
+    t: 'JWT — три части через точку',
+    d: 'Одно действие: AS (или приложение-проверяющий) берёт access/id-токен и видит, что это JWT — три base64url-части через «.». Часть 1 — HEADER (JSON): {alg: "RS256", typ: "JWT", kid: "key-2026-11"} — КАК подписан и КАКОЙ ключ. Часть 2 — PAYLOAD (JSON): {iss, sub, aud, exp, iat, jti, scope, …} — ДАННЫЕ. Часть 3 — SIGNATURE: бинарная подпись над «header.payload» (точка в строке сохраняется). Критично: header и payload — НЕ шифрованы, а только base64url-кодированы: любой расшифрует их за секунду. JWT — не «закрытая паковка данных», а «документ с подписью»: содержимое открыто, защищена только ЦЕЛОСТНОСТЬ (подпись). Поэтому в JWT никогда не кладут секреты — «зашифрованный» вид base64 — иллюзия. Три части = «что подписано» (1.2) + «подпись» (3), и проверка = «пересчитать подпись над 1.2 и сравнить с 3».',
+    you: ['header+payload — base64url (открыты, не зашифрованы); secrets в JWT не кладут', 'JWT = документ с подписью: защищена целостность, не конфиденциальность'],
+    c: 'eyJhbG…Q2xpbnRfaWQiOiJ3ZWJfYXBwIi0ifQ\n .\neyJpc3MiOiJodHRwczovL2Fz…X0\n .\n  (base64url(подпись ECDSA/RSASSA-PSS))'
+  },
+  {
+    t: 'Подпись — приватным ключом AS',
+    d: 'Одно действие: AS строит signing input = BASE64URL(header) + "." + BASE64URL(payload) и подписывает его ПРИВАТНЫМ ключом: для RS256 — RSASSA-PKCS1-v1_5 + SHA-256, для ES256 — ECDSA над SHA-256. Результат — бинарная подпись, base64url → третья часть. Свойство: подпись делает ТОЛЬКО владелец приватного ключа (AS); публичный ключ (у проверяющих) её НЕ сделает — математически невозможно (RSA/EC). Поэтому проверка «это AS подписал» = «подпись сходится с публичным ключом AS». kid в заголовке — «какой именно ключ»: AS может иметь несколько (ротация), и kid выбирает. Без подписи JWT — просто JSON, который кто угодно сошьёт. Подпись — единственное, что делает JWT «токеном», а не «запиской».',
+    you: ['RS256 = RSASSA-PKCS1-v1_5 + SHA-256; ES256 = ECDSA-SHA256; подписывается "header.payload"', 'kid в заголовке — выбор ключа (ротация)'],
+    c: 'signing_input = b64url(header) + "." + b64url(payload)\nsig = ECDSA_P256_SHA256(priv_AS, signing_input)\njwt = signing_input + "." + b64url(sig)'
+  },
+  {
+    t: 'JWKS: публичные ключи AS для проверки подписи',
+    d: 'Одно действие: AS публикует endpoint jwks_uri (из discovery): JSON с массивом ПУБЛИЧНЫХ ключей. Каждый ключ: {kty: "EC", crv: "P-256", x, y, kid: "key-2026-11", use: "sig", alg: "ES256"} — публичная часть (x,y для EC; n,e для RSA). Публичный ключ НЕ секрет: его можно скачать, сохранить, показать. Проверяющий (RP/API) кэширует JWKS и по kid из заголовка JWT находит нужный ключ. Зачем не «один ключ навсегда»: (1) ротация без простоя (шаг 5); (2) компрометация приватного ключа → ротация, старые токены по старому kid — проверяются, новые — по новому; (3) разные use (sig/enc). JWKS — «вывеска»: «вот наши публичные ключи, проверяйте». Кэшировать с TTL + refresh при unknown kid.',
+    you: ['GET jwks_uri → {keys:[{kty, crv/x/y|n/e, kid, use:"sig", alg}]}', 'Кэш JWKS + refresh при неизвестном kid (ротация в процессе)'],
+    c: 'GET https://as.example/.well-known/jwks.json\n→ { "keys": [\n   { "kty":"EC","crv":"P-256","x":"…","y":"…",\n     "kid":"key-2026-11","use":"sig","alg":"ES256" },\n   { …,"kid":"key-2026-09" } ] }'
+  },
+  {
+    t: 'Верификация: подпись + claims',
+    d: 'Одно действие (атомарно, на RP/API): проверяющий выполняет ПОЛНЫЙ стек: (1) kid → ключ из JWKS; (2) подпись: ECDSA/RSASSA над «header.payload» сходит? нет → reject (подделка или чужой ключ); (3) alg — белый список (RS256/ES256), none → reject; (4) iss == issuer AS (побайтово, из discovery); (5) aud содержит мой client_id/audience; (6) exp > now (skew 30 с); (7) iat <= now+skew; (8) jti — для id_token: nonce. Всё прошло → payload «автентичен от AS, не изменён, в силе». Критично: пропуск ЛЮБОЙ проверки — уязвимость: без exp — вечный токен; без aud — токен для чужого клиента работает; без iss — токен с другого AS. Проверка — ЧЕКЛИСТ, а не «подпись ок → дальше».',
+    you: ['Стек: kid→ключ, подпись, alg-белый список, iss, aud, exp/iat (skew 30с), nonce (id_token)', 'Пропуск любой проверки = уязвимость; alg=none — отклонять всегда'],
+    c: 'verify(jwt, jwks):\n  1) key = jwks[kid]\n  2) sig ok?      3) alg ∈ [RS256,ES256]?\n  4) iss == "https://as.example"?  5) aud ∋ "web-app-01"?\n  6) exp > now-30s?  7) iat <= now+30s?\n  → payload (authentic)'
+  },
+  {
+    t: 'Ротация ключей без простоя',
+    d: 'Одно действие: AS публикует НОВЫЙ ключ (kid=key-2026-12) в JWKS, РЯДОМ со старым (kid=key-2026-11). Теперь: новые токены подписываются НОВЫМ (kid=…12); старые токены (kid=…11) продолжают проверяться — ключ ещё в JWKS. Проверяющий при unknown kid (новый kid, кэш старый) → один refresh JWKS → retry. После миграции (все активные токены по новому kid, старые истекли по exp) AS УБИРАЕТ старый kid из JWKS. Итог: ни один момент «простой» — в любой момент работает и старый, и новый. Зачем ротация: (1) периодическая (политика, напр. 90 дней); (2) компрометация приватного (немедленно); (3) смена провайдера/ХСМ. Правило: старый ключ убирать только когда ВСЕ токены по нему истекли (max exp).',
+    you: ['Новый kid РЯДОМ со старым в JWKS; новые токены — новый kid; старый — до истечения его токенов', 'Unknown kid → refresh JWKS + один retry; старый убирать только после истечения его токенов'],
+    c: 'JWKS: [key-2026-11 (старый, active до exp), key-2026-12 (новый, подписывает)]\nновый токен: kid=12\nстарый токен: kid=11 → проверяется\n(после exp старых) JWKS: [key-2026-12]'
+  },
+  {
+    t: 'Атака: подделка без приватного ключа',
+    d: '⚠ Одно событие: атакующий хочет выдать себя за AS: подделывает JWT (свои claims: sub=жертва, aud=приложение, exp=далеко) и шлёт на RP/API. Без приватного ключа AS он НЕ МОЖЕТ подписать: (1) RSA/EC — подпись без приватного математически невозможна (не «сложно», а невозможно); (2) alg=none — проверяющий отклоняет (белый список); (3) «переподписать» чужим ключом — нет доступа к JWKS-ключу (публичный НЕ подписывает); (4) подменить JWKS endpoint (MITM) — TLS + pinning; (5) «забытая» проверка exp/aud — чеклист (шаг 4) ловит. Итог: подделка JWT без приватного ключа AS невозможна при корректной верификации. Все реальные инциденты — НЕ «взлом подписи», а «проверка подписи не делалась / alg=none приняли / iss не сверили». Подпись — крепость; слабое место — ленивая верификация.',
+    you: ['Подделка без приватного ключа невозможна; реальные инциденты — ленивая верификация (alg=none, нет iss/exp)'],
+    c: '⚠ поддельный JWT {sub:жертва, aud:приложение}\n→ подпись? (без приватного AS — невозможно)\n→ alg=none? reject\n→ iss неверный? reject\n→ подделка отклонена на любом из уровней'
+  }
+  ]
+  };
+
+  /* ── 10. DISCOVERY: /.well-known/openid-configuration ── */
+  DIAGS.discover = {
+    P: ['Приложение (РП)', 'Сервер авторизации (АС)', 'JWKS', 'Регистрация'],
+    SUB: ['ваше приложение', 'Keycloak…', '/jwks.json', 'RFC 7591'],
+    FLOW: [
+      { arrows: [a(0, 1, 'GET /.well-known/openid-configuration'), a(1, 0, '200 JSON: issuer, endpoints, algorithms, capabilities')] },
+      { arrows: [a(0, 2, 'GET jwks_uri (из metadata)'), a(2, 0, '200 [{ kty, kid, alg, use, … }]')] },
+      { arrows: [a(0, 3, 'POST /register (client_id, redirect_uri, …)'), a(3, 0, '201 { client_id, client_secret?, jwks_uri }')] },
+      { arrows: [slf(0, 'кэш: issuer, token_endpoint, jwks (TTL 1 ч)')] },
+      { arrows: [a(0, 1, 'GET /token (используем token_endpoint из metadata)')] },
+    ],
+    STEPS: [
+  {
+    t: 'Discovery: один GET — все endpoint URL',
+    d: 'Одно действие: приложение делает GET на {issuer}/.well-known/openid-configuration (issuer — из discovery-документа AS, формат урн/https) и получает ОДИН JSON со ВСЕМИ endpoint URL: authorization_endpoint, token_endpoint, jwks_uri, end_session_endpoint, revocation_endpoint, userinfo_endpoint, device_authorization_endpoint, backchannel logout, и metadata: issuer, subject_types, id_token_signing_alg_values_supported, code_challenge_methods_supported, grant_types_supported, acr_values_supported. Зачем: НЕ хардкодить URL — AS может иметь dev/stage/prod, и endpoints различаются; приложение берёт ВСЁ из одного GET. Критично: (1) issuer в ответе == запрашиваемый issuer (иначе — чужой документ); (2) TLS обязателен; (3) результат кэшировать (TTL 24ч + ETag), но не «навсегда» (ротация); (4) из discovery — code_challenge_methods_supported: есть S256? нет — PKCE не настроить. Discovery — «меню»: что AS поддерживает.',
+    you: ['GET /.well-known/openid-configuration → все endpoints + metadata', 'issuer в ответе == запрошенный; кэш 24ч; S256 в code_challenge_methods?'],
+    c: 'GET https://as.example/.well-known/openid-configuration\n→ {\n "issuer": "https://as.example",\n "authorization_endpoint": "…/authorize",\n "token_endpoint": "…/token",\n "jwks_uri": "…/jwks",\n "end_session_endpoint": "…/end-session",\n "code_challenge_methods_supported": ["S256"],\n "id_token_signing_alg_values_supported": ["ES256","RS256"] }'
+  },
+  {
+    t: 'JWKS: публичные ключи AS для верификации подписи',
+    d: 'Одно действие: приложение берёт jwks_uri из discovery (шаг 1) и делает GET → JSON с массивом публичных ключей AS. Каждый: {kty, crv, x, y, kid, use:"sig", alg}. Это те самые ключи, которыми проверяются подписи JWT (вкладка «Проверка токена», шаг 3): по kid из заголовка JWT выбирается ключ. Критично: (1) JWKS — публичный endpoint (без авторизации): его можно скачать, кэшировать, проверить; (2) в JWKS ТОЛЬКО публичные части (x,y для EC; n,e для RSA) — приватных НЕТ; (3) кэш + TTL + refresh при unknown kid (ротация без простоя); (4) использовать ТОЛЬКО по jwks_uri из discovery (не «поблизости») — защита от MITM-подмены ключей. JWKS и discovery — пара: discovery даёт URL, JWKS даёт ключи.',
+    you: ['GET jwks_uri → публичные ключи (x,y/n,e) + kid; ТОЛЬКО публичные, приватных нет', 'Кэш + TTL + refresh при unknown kid; URL — только из discovery'],
+    c: 'GET https://as.example/jwks\n→ { "keys": [\n   { "kty":"EC","crv":"P-256","x":"MFkw…","y":"…",\n     "kid":"key-2026-11","use":"sig","alg":"ES256" } ] }'
+  },
+  {
+    t: 'Client Registration: динамическая регистрация (RFC 7591)',
+    d: 'Одно действие: вместо ручной регистрации клиента в AS (заполнить форму, ждать client_id) приложение делает POST на registration_endpoint: JSON с redirect_uris, client_name, grant_types, response_types, application_type, contact, и (для конфиденциальных) token_endpoint_auth_method=private_key_jwt + jwks/jwks_uri. Ответ: 201 с client_id + (опционально) client_secret (для client_secret_basic) + registration_client_uri (для update/delete). Зачем: (1) onboarding самообслуживание — нет «заполнить форму в админке»; (2) интеграция с CI/CD — регистрация клиента как часть деплоя; (3) масштабирование — тысячи клиентов без ручной работы. Критично: (1) registration_endpoint должен быть доступен только доверенным (иначе спам клиентов); (2) response_types/grant_types — валидировать (AS не должен принимать "token" для public client без PKCE); (3) client_secret в ответе — вернуть И УБРАТЬ (не хранить в ответе-логе); (4) RFC 7592 — update/delete по registration_client_uri. Динамическая регистрация — «client как код», не «форма в админке».',
+    you: ['POST /register: redirect_uris, grant_types, response_types, token_endpoint_auth_method, jwks', '201 + client_id; registration_endpoint — только доверенным; secret — вернуть и не логировать'],
+    c: 'POST /register\n{ "redirect_uris": ["https://app.example/callback"],\n  "client_name": "Web App",\n  "grant_types": ["authorization_code","refresh_token"],\n  "response_types": ["code"],\n  "token_endpoint_auth_method": "private_key_jwt",\n  "jwks_uri": "https://app.example/.well-known/jwks.json" }\n→ 201 { "client_id": "web-app-01",\n         "registration_client_uri": "…/register/web-app-01" }'
+  },
+  {
+    t: 'Кэширование и обновление',
+    d: 'Одно действие: приложение кэширует discovery-документ + JWKS (TTL 24ч для discovery, 1ч для JWKS — по политике) и обновляет по событиям, а не «каждый запрос»: (1) TTL истёк → refresh; (2) unknown kid в JWKS (JWT с новым kid) → refresh JWKS + retry (ротация); (3) 4xx от endpoint (endpoint переехал) → refresh discovery. Критично: (1) НЕ «каждый запрос — GET discovery»: это 2-3 HTTP на каждый вход, нагрузка; (2) кэш — в памяти + опционально на диске, с ETag/If-Modified-Since (AS может вернуть 304); (3) инвалидация по 4xx (endpoint изменился); (4) negative caching: 5xx от discovery — короткое TTL (5 мин), не «навсегда кэшировать ошибку». Итог: discovery — один раз за 24ч, JWKS — при ротации, а не «на каждый вход».',
+    you: ['Кэш discovery (24ч) + JWKS (1ч); refresh по TTL / unknown kid / 4xx', 'Не «на каждый запрос»; negative caching 5xx — короткое TTL'],
+    c: 'cache.set("discovery", doc, {ttl: 24h, etag})\n// refresh triggers:\n//  ttl expired | unknown kid | 4xx from endpoint\n// negative: 5xx → ttl 5min'
+  },
+  {
+    t: 'Использование metadata в запросах',
+    d: 'Одно действие: приложение ЧИТАЕТ metadata из discovery и ПРИМЕНЯЕТ в запросах: (1) id_token_signing_alg_values_supported → выбрать alg для проверки (RS256/ES256, не «по умолчанию»); (2) code_challenge_methods_supported → S256 есть? → PKCE; (3) grant_types_supported → device_authorization? → device flow доступен; (4) acr_values_supported → какие уровни step-up предложить; (5) require_pushed_authorization_requests → PAR обязателен (вкладка PAR); (6) backchannel_logout_supported → back-channel logout доступен (вкладка Выход). Критично: metadata — не «информация к сведению», а ДАННЫЕ ДЛЯ РЕШЕНИЙ: «S256 в списке? да → настроить PKCE», а не «я надеюсь, что S256 есть». Игнорирование metadata — «работа вслепую»: приложение не знает, что AS поддерживает, и ломается на unsupported_feature. Discovery — «контракт»: что AS обещает, и приложение строит запросы по этому обещанию.',
+    you: ['Metadata → решения: alg, PKCE (S256?), grant_types, acr_values, PAR?, backchannel_logout?', 'Не «надеемся, что есть», а «S256 в списке → PKCE»'],
+    c: 'if (meta.code_challenge_methods_supported ∋ "S256") → PKCE on\nif (meta.require_pushed_authorization_requests) → PAR on\nif (meta.backchannel_logout_supported) → back-logout on\nalg = pick(meta.id_token_signing_alg_values_supported)'
+  }
+  ]
+  };
+
+  /* ── 11. PAR: Protected Authorization Request ── */
+  DIAGS.par = {
+    P: ['Приложение (РП)', 'Сервер авторизации (АС)', 'Браузер', 'Злоумышленник'],
+    SUB: ['ваше приложение', 'Keycloak…', 'SPA / mobile', 'прослушка URL'],
+    FLOW: [
+      { arrows: [a(0, 1, 'POST /par (scope, code_challenge, nonce, state, redirect_uri)'), a(1, 0, '201 { "uri":"urn:ietf:params:oauth:request_uri:7f3a…" }  TTL ~60 с · single-use')] },
+      { arrows: [a(0, 2, '302 /authorize?client_id&request_uri=urn:… (в URL НЕТ scope/nonce/challenge)')] },
+      { arrows: [a(2, 1, 'GET /authorize?client_id&request_uri — AS достаёт параметры из хранилища'), slf(1, 'validate: client_id ✓ · not used · not expired → extract (TTL ~60 с · single-use)')] },
+      { arrows: [a(2, 3, '⚠ URL с request_uri утекает (Referer, лог прокси, кэш CDN)', 1), slf(1, 'без client auth не обменять · TTL 60 с · single-use → invalid_request_uri ✗')] },
+    ],
+    STEPS: [
+  {
+    t: 'Запрос авторизации — в POST, не в GET-URL',
+    d: 'Одно действие: вместо классического GET /authorize?client_id=…&state=…&code_challenge=… (вкладка «Основной вход», шаг 1.3) приложение делает POST на pushed_authorization_request_endpoint: body — ВСЕ параметры авторизации (client_id, redirect_uri, response_type, scope, state, nonce, code_challenge, method). Ответ: 201 с request_uri (краткий идентификатор) + expires_in (обычно 60 с). Зачем: классический GET /authorize?… — ВСЕ параметры в URL: (1) URL в историю браузера, Referer, логи прокси — state/nonce/code_challenge ПУБЛИЧНЫ; (2) очень длинные URL (много параметров) — 2048 limit; (3) атакующий может «засеять» чужим /authorize URL (login CSRF усиление). PAR убирает ВСЁ из URL: в URL остаётся только request_uri (краткий, бессмысленный без access к AS). RFC 9126. Критично: request_uri — ОДНОРАЗОВЫЙ, expires_in 60 с, и AS привязывает его к клиенту (только этот клиент может использовать).',
+    you: ['POST /par: ВСЕ параметры в body → 201 {request_uri, expires_in:60}', 'URL остаётся чистым: только request_uri (одноразовый, 60с, привязан к клиенту)'],
+    c: 'POST /par\nclient_id=web-app-01&redirect_uri=…&response_type=code\n&scope=openid profile email&state=…&nonce=…\n&code_challenge=…&code_challenge_method=S256\n→ 201 { "request_uri": "urn:ietf:params:oauth:request_uri:abc123",\n         "expires_in": 60 }'
+  },
+  {
+    t: '302 на /authorize — только request_uri',
+    d: 'Одно действие: приложение делает 302 (как в шаге 1.3 Основного входа), НО в URL — только request_uri: /authorize?request_uri=urn:…:abc123. ВСЕ параметры (client_id, state, nonce, code_challenge, scope) — НЕ в URL: они уже в AS (записаны при POST /par). AS по request_uri находит «запасённый» запрос и обрабатывает его. Визуально: URL /authorize?request_uri=urn:… — КРАТКИЙ, не содержит чувствительных параметров. Критично: (1) request_uri — одноразовый (использован → сгорел); (2) expires_in 60 с (не пришёл за минуту → сгорел); (3) только ЭТОТ клиент (client_id, который делал POST /par) может использовать request_uri — чужой клиент с тем же request_uri → 400; (4) PAR обязателен? — из discovery: require_pushed_authorization_requests=true → ВСЕ /authorize только через request_uri (классический GET /authorize?… — 400).',
+    you: ['302 /authorize?request_uri=… — ВСЕ параметры НЕ в URL', 'request_uri: одноразовый, 60с, только этот клиент; require_pushed…=true → только PAR'],
+    c: '302 Found\nLocation: https://as.example/authorize\n  ?request_uri=urn:ietf:params:oauth:request_uri:abc123\n// (client_id, state, nonce, code_challenge — НЕ в URL)'
+  },
+  {
+    t: 'AS забирает параметры из хранилища',
+    d: 'Одно действие: AS получает GET /authorize?request_uri=… и: (1) ищет request_uri в хранилище (записан при POST /par); (2) проверяет: жив (expires_in не истёк), одноразовый (не использован), клиент — тот, который делал POST /par (client_id сверить — из аутентификации или из контекста); (3) берёт ВСЕ параметры из записанного запроса (client_id, redirect_uri, state, nonce, code_challenge, scope); (4) АТОМАРНО помечает request_uri использованным (single-use); (5) обрабатывает /authorize как обычно (вход, consent, code). Критично: (1) request_uri — single-use (повторный /authorize?request_uri=… → 400); (2) привязка к client_id (чужой клиент → 400); (3) TTL 60 с (истёк → 400, «запрос просрочен»); (4) параметры из хранилища (НЕ из URL — в URL только request_uri). Итог: «запасённый» запрос извлекается и обрабатывается — пользователь видит обычный /authorize, но параметры пришли «изнутри AS», не из URL.',
+    you: ['AS: request_uri → хранилище → жив? одноразовый? клиент? → параметры → single-use mark → /authorize', 'Pовторный/чужой/истёкший request_uri → 400'],
+    c: 'AS: lookup(request_uri=abc123)\n  → {client_id: web-app-01, state, nonce, code_challenge, …}\n  → alive(60s)? yes | unused? yes | client matches? yes\n  → mark used (atomic)\n  → process /authorize (вход → consent → code)'
+  },
+  {
+    t: 'Атака: утечка URL',
+    d: '⚠ Сценарий, который PAR закрывает: БЕЗ PAR — атакующий «засевает» жертве URL /authorize?client_id=АТАК&state=АТАК&… (через ссылку, email, XSS). Жертва кликает → браузер идёт на /authorize с ПАРАМЕТРАМИ АТАКУЮЩЕГО → если жертва уже вошла в AS → AS выдаёт code (для АТАК) → атакующий обменивает code → привязывает учётку жертвы к СВОЕЙ сессии (login CSRF). С PAR: атакующий НЕ МОЖЕТ «засеять» /authorize?… (все параметры — в POST /par, не в URL). Единственное, что можно засеять — /authorize?request_uri=…, НО: (1) request_uri — одноразовый (атакующий должен сгенерировать СВОЙ через POST /par под СВОИМ client_id); (2) привязан к client_id (жертва, открывшая request_uri атакующего, — client не совпадёт с сессией жертвы); (3) 60 с (засеять и ждать клика за минуту — не успеет). Итог: PAR убирает «URL как вектор атаки» — в URL только краткий одноразовый идентификатор, не параметры.',
+    you: ['БЕЗ PAR: /authorize?… в URL → login CSRF; С PAR: request_uri одноразовый + привязка к client + 60с → засевание бесполезно'],
+    c: '⚠ Б ЕЗ PAR: жертва кликает /authorize?client_id=АТАК&…\n   → login CSRF (учётка жертвы → сессия атакующего)\nС PAR: /authorize?request_uri=… (чужой)\n   → client mismatch | expired | used → 400'
+  }
+  ]
+  };
+
+  var SVGNS = 'http://www.w3.org/2000/svg';
+  var DIAG_KEYS = ['core','pkce','client','refresh','dpop','device','stepup','logout','token','discover','par'];
+  window.__A21 = { DIAGS: DIAGS }; // debug/QA-хук
+  var state = {};
+  var seqFns = {};
+  var stepFns = {};
+  var stepMap = {};
+
+  function el(n, attrs, parent) {
+    var e = document.createElementNS(SVGNS, n);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+
+  function diagramH(n) { return 76 + n * 48 + 20; }
+
+  function buildDiag(key) {
+    var D = DIAGS[key];
+    if (!D || state[key]) return;
+    var seqwrap = document.getElementById('a21-seq-' + key);
+    var listwrap = document.getElementById('a21-list-' + key);
+    var dtitle = document.getElementById('a21-dt-' + key);
+    var ddesc = document.getElementById('a21-dd-' + key);
+    var dyou = document.getElementById('a21-dy-' + key);
+    var dcode = document.getElementById('a21-dc-' + key);
+    var posEl = document.getElementById('a21-pos-' + key);
+    var prevB = document.getElementById('a21-prev-' + key);
+    var nextB = document.getElementById('a21-next-' + key);
+    var curStep = 0;
+
+    function markActive() {
+      seqwrap.querySelectorAll('g.fstep').forEach(function (g) {
+        g.classList.toggle('active', +g.getAttribute('data-step') === curStep);
+      });
+      listwrap.querySelectorAll('.vrow').forEach(function (r) {
+        r.setAttribute('aria-pressed', +r.getAttribute('data-step') === curStep ? 'true' : 'false');
+      });
+    }
+
+    /* ── Анимация перелёта «пакета данных» по стрелкам активного шага ──
+       gen-счётчик: предыдущая анимация ОБРЫВАЕТСЯ мгновенно при новой
+       (критерий: «спамит кнопку — анимации не наслаиваются»);
+       prefers-reduced-motion: анимация отключена полностью. */
+    var pktGen = 0;
+    function reduceMotionNow() {
+      return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    }
+    function flyPacket() {
+      if (reduceMotionNow() || seqwrap.hidden) return;
+      var gen = ++pktGen;
+      var g = seqwrap.querySelector('g.fstep[data-step="' + curStep + '"]');
+      if (!g) return;
+      seqwrap.querySelectorAll('.pkt').forEach(function (n) { n.remove(); });
+      var nodes = g.querySelectorAll('line, path.loop');
+      var arrows = D.FLOW[curStep] ? D.FLOW[curStep].arrows : [];
+      /* Точка на стрелке аналитически (line: интерполяция; loop: d = h14 + arc6 + v12 + arc6 + h14 = 60):
+         не зависит от getPointAtLength, который падает на unfocused/headless-документах */
+      function pointOn(node, d) {
+        if (node.tagName === 'line') {
+          var x1 = +node.getAttribute('x1'), y1 = +node.getAttribute('y1');
+          var x2 = +node.getAttribute('x2'), y2 = +node.getAttribute('y2');
+          var Ln = Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)) || 1;
+          var t = Math.max(0, Math.min(1, d / Ln));
+          return { x: x1 + (x2 - x1) * t, y: y1 + (y2 - y1) * t };
+        }
+        var dd = node.getAttribute('d') || '';
+        var dir = dd.indexOf('h -14') === 0 ? -1 : 1;
+        var m = dd.match(/^M ([0-9.]+),([0-9.]+) h/);
+        var x0 = m ? +m[1] : 0, y0 = m ? +m[2] : 0;
+        var seg = [14, 12, 12, 12, 14];
+        var cx = x0, cy = y0;
+        for (var si = 0; si < seg.length; si++) {
+          if (d <= seg[si] || si === seg.length - 1) {
+            var s = Math.min(d, seg[si]);
+            if (si === 0) return { x: cx + dir * s, y: cy };
+            if (si === 1) { var th1 = s / 2; return { x: cx + dir * 6, y: cy + 6 - 6 * Math.cos(th1) }; }
+            if (si === 2) return { x: cx, y: cy + s };
+            if (si === 3) { var th2 = s / 2; return { x: cx - dir * 6 * Math.sin(th2), y: cy + 6 + 6 * (1 - Math.cos(th2)) }; }
+            return { x: cx - dir * s, y: cy };
+          }
+          d -= seg[si];
+          if (si === 0) cx += dir * seg[si];
+          if (si === 1) { cx += dir * 6; cy += 6; }
+          if (si === 2) cy += seg[si];
+          if (si === 3) { cx -= dir * 6; cy += 6; }
+        }
+        return { x: x0, y: y0 };
+      }
+      function lenOf(node) {
+        if (node.tagName === 'line') {
+          var a = +node.getAttribute('x1'), b = +node.getAttribute('y1');
+          var c = +node.getAttribute('x2'), e2 = +node.getAttribute('y2');
+          return Math.sqrt((c - a) * (c - a) + (e2 - b) * (e2 - b));
+        }
+        return 60;
+      }
+      nodes.forEach(function (node, ai) {
+        var warn = ai < arrows.length && arrows[ai].l.indexOf('⚠') === 0;
+        var col = warn ? 'var(--red)' : 'var(--s1)';
+        var L = lenOf(node);
+        if (!L) return;
+        var dur = Math.max(600, Math.min(1200, L * 1.4));
+        var dot = el('circle', { r: 4.5, fill: col, 'class': 'pkt' }, g);
+        var tail = el('circle', { r: 8, fill: col, 'class': 'pkt pkt-trail' }, g);
+        dot.style.pointerEvents = 'none';
+        tail.style.pointerEvents = 'none';
+        function place(p) {
+          var pt = pointOn(node, p * L);
+          dot.setAttribute('cx', pt.x); dot.setAttribute('cy', pt.y);
+          var pt2 = pointOn(node, Math.max(0, p - 0.06) * L);
+          tail.setAttribute('cx', pt2.x); tail.setAttribute('cy', pt2.y);
+        }
+        var t0 = null;
+        function frame(ts) {
+          if (gen !== pktGen) { dot.remove(); tail.remove(); return; }
+          /* панель перерисована/скрыта во время полёта — обрываем без шума */
+          if (!dot.isConnected) { dot.remove(); tail.remove(); return; }
+          if (t0 === null) t0 = ts;
+          var p = Math.min(1, (ts - t0) / dur);
+          var e = p * p * (3 - 2 * p); /* ease-in-out */
+          place(e);
+          if (p < 1) requestAnimationFrame(frame);
+          else {
+            var pt = pointOn(node, L);
+            var pulse = el('circle', { cx: pt.x, cy: pt.y, r: 6, fill: 'none', stroke: col, 'stroke-width': 2, 'class': 'pkt pkt-pulse' }, g);
+            pulse.style.pointerEvents = 'none';
+            setTimeout(function () {
+              if (gen !== pktGen) return;
+              dot.remove(); tail.remove(); pulse.remove();
+            }, 650);
+          }
+        }
+        setTimeout(function () { if (gen === pktGen) requestAnimationFrame(frame); }, ai * 160);
+      });
+    }
+
+    function ellip(t, maxW) {
+      // обрезка ПО СЛОВАМ + «…»; полная строка остаётся в <title>
+      if (t.length * 6.2 <= maxW) return t;
+      var out = '', i;
+      for (i = t.length; i > 1; i--) {
+        out = t.slice(0, i);
+        if (out.length * 6.2 + 10 > maxW) continue;
+        var sp = out.lastIndexOf(' ');
+        if (sp > i - 12) out = t.slice(0, sp);
+        else out = t.slice(0, i);
+        return out.replace(/\s+$/, '') + '…';
+      }
+      return t.slice(0, 2) + '…';
+    }
+
+    function drawSeq(w) {
+      seqwrap.textContent = '';
+      var n = D.P.length, DH = diagramH(D.FLOW.length);
+      var svg = el('svg', { 'class': 'flow-svg', viewBox: '0 0 ' + w + ' ' + DH, role: 'img',
+        'aria-label': 'Диаграмма последовательности: ' + D.STEPS.length + ' шагов — ' + D.STEPS[0].t });
+      seqwrap.appendChild(svg);
+      var defs = el('defs', {}, svg);
+      var mk = el('marker', { id: 'a21-arw-' + key, markerWidth: 7, markerHeight: 7, refX: 6.5, refY: 3.5, orient: 'auto' }, defs);
+      el('path', { d: 'M0,0 L7,3.5 L0,7 Z', fill: 'currentColor' }, mk);
+      var arw = 'url(#a21-arw-' + key + ')';
+
+      var cols = [], i;
+      for (i = 0; i < n; i++) cols.push(52 + i * (w - 104) / (n - 1));
+      var gap = (w - 104) / (n - 1);
+
+      for (i = 0; i < n; i++) {
+        // блок подстраивается под ЗАГОЛОВОК И подзаголовок (не меньше 84, не больше шага колонок)
+        var tw = Math.max(D.P[i].length * 6.8, D.SUB[i].length * 6.2) + 24;
+        var bw = Math.min(Math.max(84, tw), gap - 8);
+        var bx = Math.max(4, Math.min(cols[i] - bw / 2, w - 4 - bw));
+        var bc = bx + bw / 2;
+        var r = el('rect', { x: bx, y: 6, width: bw, height: 44, rx: 8,
+          fill: 'var(--muted)', stroke: 'var(--border)' }, svg);
+        var tt = el('title', {}, r);
+        tt.textContent = D.P[i] + ' — ' + D.SUB[i];
+        var t1 = el('text', { x: bc, y: 22, 'text-anchor': 'middle', 'class': 'ttl' }, svg);
+        t1.textContent = ellip(D.P[i], bw - 12);
+        var t2 = el('text', { x: bc, y: 40, 'text-anchor': 'middle', 'class': 'sub' }, svg);
+        t2.textContent = ellip(D.SUB[i], bw - 12);
+        el('line', { x1: cols[i], y1: 52, x2: cols[i], y2: DH - 14, stroke: 'var(--border)', 'stroke-width': 1 }, svg);
+      }
+
+      D.FLOW.forEach(function (st, si) {
+        var top = 76 + si * 48, cy = top + 24;
+        var g = el('g', { 'class': 'fstep', 'data-step': si }, svg);
+        var hit = el('rect', { x: 4, y: top + 2, width: w - 8, height: 44,
+          fill: 'transparent', 'class': 'bandhit' }, g);
+        hit.addEventListener('click', function () { selectStep(si); });
+
+        var chip = el('g', { 'class': 'chip' }, g);
+        el('circle', { cx: 20, cy: cy, r: 10 }, chip);
+        var cn = el('text', { x: 20, y: cy + 4, 'text-anchor': 'middle', 'class': 'chipnum' }, chip);
+        cn.textContent = String(si + 1);
+
+        var cnt = st.arrows.length;
+        var offs = cnt === 3 ? [-13, 1, 15] : (cnt === 2 ? [-9, 7] : [-1]);
+        st.arrows.forEach(function (ar, ai) {
+          var y = cy + offs[ai];
+          var warn = ar.l.indexOf('⚠') === 0 ? ' warn' : '';
+          if (ar.self !== undefined) {
+            var x = cols[ar.self];
+            // подпись — в ту сторону, где больше места (и никогда за край viewBox)
+            var rightSpace = (cols[ar.self + 1] !== undefined ? cols[ar.self + 1] : w) - x - 40;
+            var leftSpace = x - (cols[ar.self - 1] !== undefined ? cols[ar.self - 1] : 40) - 40;
+            var dir = rightSpace >= leftSpace ? 1 : -1;
+            el('path', { 'class': 'loop',
+              d: dir === 1
+                ? 'M ' + x + ',' + y + ' h 14 q 6 0 6 6 v 6 q 0 6 -6 6 h -14'
+                : 'M ' + x + ',' + y + ' h -14 q -6 0 -6 6 v 6 q 0 6 6 6 h 14',
+              'marker-end': arw }, g);
+            var span = dir === 1 ? rightSpace : leftSpace;
+            var txt = ellip(ar.l, span);
+            var nl = el('text', { x: dir === 1 ? x + 28 : x - 28, y: y + 13,
+              'text-anchor': dir === 1 ? 'start' : 'end', 'class': 'lbl' + warn }, g);
+            nl.textContent = txt;
+            var ntt = el('title', {}, nl);
+            ntt.textContent = ar.l;
+          } else {
+            var x1, x2;
+            if (ar.t > ar.f) { x1 = cols[ar.f] + 4; x2 = cols[ar.t] - 7; }
+            else { x1 = cols[ar.f] - 4; x2 = cols[ar.t] + 7; }
+            el('line', { x1: x1, y1: y, x2: x2, y2: y, 'marker-end': arw }, g);
+            var spanLbl = Math.abs(x2 - x1);
+            var txt2 = ar.l.length * 6.2 + 18 < spanLbl ? ar.l : ellip(ar.l, spanLbl);
+            var lbl = el('text', { x: (x1 + x2) / 2, y: y - 4, 'text-anchor': 'middle', 'class': 'lbl' + warn }, g);
+            lbl.textContent = txt2;
+            var lt2 = el('title', {}, lbl);
+            lt2.textContent = ar.l;
+          }
+        });
+      });
+      markActive();
+    }
+
+    function drawList() {
+      listwrap.textContent = '';
+      D.FLOW.forEach(function (st, si) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'vrow';
+        b.setAttribute('data-step', si);
+        b.setAttribute('aria-pressed', 'false');
+        var num = document.createElement('span');
+        num.className = 'vnum';
+        num.textContent = String(si + 1);
+        var body = document.createElement('span');
+        body.className = 'vbody';
+        var ti = document.createElement('span');
+        ti.className = 'vtitle';
+        ti.textContent = D.STEPS[si].t;
+        var meta = document.createElement('span');
+        meta.className = 'vmeta';
+        meta.textContent = st.arrows.map(function (ar) {
+          return ar.self !== undefined ? D.P[ar.self] + ': ' + ar.l
+            : D.P[ar.f] + ' → ' + D.P[ar.t] + ': ' + ar.l;
+        }).join('  ·  ');
+        body.appendChild(ti);
+        body.appendChild(meta);
+        b.appendChild(num);
+        b.appendChild(body);
+        b.addEventListener('click', function () { selectStep(si); });
+        listwrap.appendChild(b);
+      });
+    }
+
+    function selectStep(i) {
+      curStep = Math.max(0, Math.min(D.STEPS.length - 1, i));
+      dtitle.textContent = 'Шаг ' + (curStep + 1) + '. ' + D.STEPS[curStep].t;
+      var ssT = document.getElementById('a21-sst-' + key);
+      if (ssT) { ssT.textContent = D.STEPS[curStep].t; ssT.previousElementSibling.textContent = String(curStep + 1); }
+      var _dd = D.STEPS[curStep].d;
+      if (_dd.indexOf('<b>') !== -1) {
+        ddesc.innerHTML = '';
+        var _tmp = document.createElement('div');
+        _tmp.innerHTML = _dd.replace(/<b>/g, '\u0001B1\u0001').replace(/<\/b>/g, '\u0001B0\u0001').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/\u0001B1\u0001/g, '<strong>').replace(/\u0001B0\u0001/g, '</strong>');
+        while (_tmp.firstChild) ddesc.appendChild(_tmp.firstChild);
+      } else { ddesc.textContent = _dd; }
+      dyou.textContent = '';
+      D.STEPS[curStep].you.forEach(function (y) {
+        var li = document.createElement('li');
+        li.textContent = y;
+        dyou.appendChild(li);
+      });
+      dcode.textContent = D.STEPS[curStep].c;
+            stepMap[key] = curStep;
+      sidebarHi();
+posEl.textContent = 'Шаг ' + (curStep + 1) + ' из ' + D.STEPS.length;
+      prevB.disabled = curStep === 0;
+      nextB.disabled = curStep === D.STEPS.length - 1;
+      markActive();
+      if (!seqwrap.hidden && seqwrap.querySelector('svg')) flyPacket();
+    }
+    prevB.addEventListener('click', function () { selectStep(curStep - 1); });
+    nextB.addEventListener('click', function () { selectStep(curStep + 1); });
+
+    var pending = false;
+    var lastW = 0;
+    var ro = new ResizeObserver(function (entries) {
+      var cw = Math.floor(entries[entries.length - 1].contentRect.width);
+      if (pending) return;
+      pending = true;
+      requestAnimationFrame(function () {
+        pending = false;
+        if (cw >= 560) {
+          /* Ширина не изменилась (например, изменилась ВЫСОТА из-за текста шага) —
+             НЕ перерисовывать: перерисовка вырезала бы летящий «пакет данных» */
+          if (lastW === cw && seqwrap.querySelector('svg')) return;
+          lastW = cw;
+          listwrap.hidden = true;
+          seqwrap.hidden = false;
+          drawSeq(cw);
+        } else {
+          lastW = 0;
+          seqwrap.hidden = true;
+          listwrap.hidden = false;
+          if (!listwrap.childElementCount) drawList();
+          markActive();
+        }
+      });
+    });
+    ro.observe(document.getElementById('a21-p-' + key));
+    selectStep(0);
+    state[key] = true;
+    stepFns[key] = selectStep;
+    seqFns[key] = { drawSeq: drawSeq, drawList: drawList, seqwrap: seqwrap, listwrap: listwrap };
+  }
+  function drawSeqPublic(k, cw) { seqFns[k].seqwrap.setAttribute('data-w', String(cw)); seqFns[k].drawSeq(cw); }
+  function drawListPublic(k) { seqFns[k].drawList(); }
+
+  /* ── Вкладки ── */
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('.tab[data-diag]'));
+  var panels = {};
+  DIAG_KEYS.forEach(function (k) { panels[k] = document.getElementById('a21-p-' + k); });
+  tabs.forEach(function (t) {
+    t.addEventListener('keydown', function (e) {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      var i = tabs.indexOf(t), n = tabs.length;
+      var next = e.key === 'ArrowRight' ? (i + 1) % n : (i - 1 + n) % n;
+      tabs[next].focus(); tabs[next].click(); e.preventDefault();
+    });
+    t.addEventListener('click', function () {
+      var k = t.getAttribute('data-diag');
+      tabs.forEach(function (o) {
+        o.classList.toggle('active', o === t);
+        o.setAttribute('aria-selected', o === t ? 'true' : 'false');
+      });
+      DIAG_KEYS.forEach(function (o) { panels[o].hidden = (o !== k); if (o !== k) delete stepMap[o]; });
+      var glosP = document.getElementById('a21-p-glos');
+      glosP.hidden = (k !== 'glos');
+      if (k === 'glos') { scrollGlos(); return; }
+      buildDiag(k);
+      requestAnimationFrame(function () {
+        var panel = panels[k];
+        var cw = Math.floor(panel.clientWidth);
+        var seq = document.getElementById('a21-seq-' + k);
+        if (cw >= 560) {
+          document.getElementById('a21-list-' + k).hidden = true;
+          seq.hidden = false;
+          if (!seq.querySelector('svg') || seq.getAttribute('data-w') !== String(cw)) drawSeqPublic(k, cw);
+        } else {
+          seq.hidden = true;
+          var list = document.getElementById('a21-list-' + k);
+          list.hidden = false;
+          if (!list.childElementCount) drawListPublic(k);
+        }
+      });
+      document.getElementById('a21-main').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  /* ── Глоссарий: вкладка (namespace a21-glos / glos*) ── */
+  var GLOS = [
+    ['Компоненты и роли', 'РП', 'Relying Party', 'Ваше приложение (портал, SPA, мобилка). Запрашивает у АС токены, проверяет ID-токен и показывает данные. Сессия пользователя живёт у РП.'],
+    ['Компоненты и роли', 'АС', 'Authorization Server / OP', 'Сервер авторизации (в OIDC — OpenID Provider). Хранит пароли, показывает вход и MFA, выдаёт access/ID/refresh-токены, публикует JWKS и discovery. Примеры: Keycloak, Google, Auth0.'],
+    ['Компоненты и роли', 'API (ресурс)', 'Resource Server', 'Ваш сервер данных. Отдаёт данные только при валидном access-токене (подпись, aud, срок). Токен — в заголовке Authorization: Bearer, не в URL.'],
+    ['Компоненты и роли', 'Публичный клиент', '', 'SPA, мобильное, CLI: код видит пользователь, секрет хранить негде. В 2.1 обязан работать только через PKCE.'],
+    ['Компоненты и роли', 'Конфиденциальный клиент', '', 'Приложение с бэкендом, умеет держать секрет (client_secret или ключ). Доступны потоки с аутентификацией клиента.'],
+
+    ['Токены', 'access_token', '', 'Короткоживущий «пропуск» к API (минуты). В 2.1 — sender-constrained (DPoP/mTLS): без ключа клиента бесполезен.'],
+    ['Токены', 'id_token', 'ID-токен', 'Подписанный JWT «кто вошёл»: sub, email, nonce, auth_time, acr, sid. Проверяется один раз при входе, потом выбрасывается.'],
+    ['Токены', 'refresh_token', '', '«Продление пропуска»: новый access-токен без повторного входа. В 2.1 — только ротация: каждый refresh возвращает новый, старый мёртв.'],
+    ['Токены', 'JWT', 'JSON Web Token, RFC 7519', 'Три части через точку: заголовок.данные.подпись. Читать можно, подделать нельзя без ключа. alg=none и чужие alg — отклонять.'],
+    ['Токены', 'sender-constrained токен', '', 'Токен «приклеен» к клиенту: работает только с доказательством владения (DPoP-подпись или TLS-сертификат). Кража без ключа = мусор.'],
+    ['Токены', 'claims', '', 'Поля внутри JWT. Ключевые: sub, iss, aud, exp, iat, nonce, sid, auth_time, acr, amr.'],
+
+    ['Параметры и claims', 'client_id', '', 'Публичный «логин» приложения у АС. Не секрет, виден в URL.'],
+    ['Параметры и claims', 'client_secret', '', '«Пароль» конфиденциального клиента. Только на бэкенде; в 2.1 рекомендуют private_key_jwt / mTLS. В SPA/мобилках — не используется.'],
+    ['Параметры и claims', 'redirect_uri', '', 'Адрес возврата после входа. Точное совпадение с зарегистрированным — иначе ошибка. В 2.1 wildcard запрещены.'],
+    ['Параметры и claims', 'scope', '', '«Что можно»: openid включает OIDC и ID-токен; profile/email — поля профиля; offline_access — refresh-токен.'],
+    ['Параметры и claims', 'state', '', 'Случайная строка против CSRF: запоминается перед редиректом, сверяется при возврате. Не совпала — HTTP 400.'],
+    ['Параметры и claims', 'nonce', '', 'Метка против повторного использования ID-токена: уходит в запрос, возвращается внутри id_token; РП сверяет.'],
+    ['Параметры и claims', 'code_verifier / code_challenge', 'PKCE, RFC 7636', 'Секретная и публичная половинки: challenge = BASE64URL(SHA256(verifier)). Challenge — в /authorize, verifier — только на /token. Только S256.'],
+    ['Параметры и claims', 'grant_type', '', '«Как получаем токен»: authorization_code — основной и фактически единственный в 2.1. implicit и password удалены.'],
+    ['Параметры и claims', 'acr / amr', '', 'acr — достигнутый уровень проверки (s156 пароль, s256 2FA, s356 hardware). amr — методы (password, otp, webauthn).'],
+    ['Параметры и claims', 'auth_time', '', 'Момент последней интерактивной проверки. РП сравнивает с max_age — на этом работает Step-Up.'],
+    ['Параметры и claims', 'sid', 'Session ID', 'Идентификатор сессии у АС. Общий для всех приложений — по нему выход «разлетается» на все клиентские сессии.'],
+
+    ['Эндпоинты', '/authorize', '', 'Страница входа АС: сюда уходит браузер пользователя.'],
+    ['Эндпоинты', '/token', '', 'Обмен кода на токены. Только сервер-сервер или публичный клиент с PKCE; токены никогда не в URL.'],
+    ['Эндпоинты', '/userinfo', '', 'Профиль пользователя по access-токену: имя, email, picture.'],
+    ['Эндпоинты', 'introspection', 'RFC 7662', '«Жив ли токен и чей?» — для непрозрачных (не-JWT) токенов. Для JWT достаточно локальной проверки по JWKS.'],
+    ['Эндпоинты', 'revocation', 'RFC 7009', 'POST /revoke { token, token_type_hint }: отзыв access/refresh-токена при выходе.'],
+    ['Эндпоинты', 'jwks_uri / JWKS', 'JSON Web Key Set', 'Публичные ключи АС для проверки подписи JWT. Кэшируются; при новом kid — refresh. Во время overlap живы два kid.'],
+    ['Эндпоинты', 'discovery', '/.well-known/openid-configuration', 'Один GET — все URL и настройки АС (issuer, endpoints, alg). Приложение не хардкодит адреса.'],
+    ['Эндпоинты', 'end_session_endpoint', '', 'Front-channel logout: РП редиректит браузер сюда с id_token_hint; АС убивает свою сессию.'],
+    ['Эндпоинты', 'request_uri', 'PAR, RFC 9126', 'Одноразовый указатель (TTL ~60 с): чувствительные параметры — POST-ом на /par, в URL только client_id + request_uri.'],
+
+    ['Потоки и безопасность', 'Authorization Code + PKCE', '', 'Основной поток: /authorize → code → POST /token с code_verifier. PKCE обязателен для всех клиентов в 2.1.'],
+    ['Потоки и безопасность', 'DPoP', 'RFC 9449', 'Sender-constraint: access-токен «запечатан» thumbprintом DPoP-ключа (cnf.dpop_jkt). Украденный AT без ключа — 401.'],
+    ['Потоки и безопасность', 'mTLS', 'RFC 8705 / 9525', 'Аутентификация клиента X.509-сертификатом на TLS-рукопожатии (цепочка до CA + SAN). Привязка — по x5t#S256.'],
+    ['Потоки и безопасность', 'private_key_jwt', 'RFC 7523', 'Аутентификация клиента подписью вместо пароля: JWT-assertion, подписанный его приватным ключом (exp ≤ 10 мин, jti — anti-replay).'],
+    ['Потоки и безопасность', 'Refresh-ротация', 'RFC 9700 §2.1.2', 'Каждый refresh возвращает новый, старый мёртв. Повторное использование старого (reuse) — компрометация: АС отзывает все токены клиента.'],
+    ['Потоки и безопасность', 'Step-Up (MFA)', 'RFC 9470', 'Повторный вход с MFA для привилегированных операций: prompt=login + max_age=0 + require_step_up=true → новый IDT с acr ≥ s256.'],
+    ['Потоки и безопасность', 'Device Flow', 'RFC 8628', 'Вход с устройства без браузера (ТВ, CLI): код на экране → пользователь вводит в браузере. long-polling с slow_down.'],
+    ['Потоки и безопасность', 'Front-channel logout', '', 'АС редиректит браузер на end_session — клиент выходит, пока пользователь видит. Нужен sid.'],
+    ['Потоки и безопасность', 'Back-channel logout', 'RFC 9521', 'АС сам шлёт клиенту подписанный POST с sid — клиент выходит, даже если вкладка закрыта. logout_token (JWT).'],
+    ['Потоки и безопасность', 'Session Management', 'RFC 9473', 'РП периодически проверяет жизнь сессии АС: GET session_endpoint?sid → active:true/false.'],
+    ['Потоки и безопасность', 'Dynamic Client Registration', 'RFC 7591', 'Клиент регистрируется у АС API-вызовом, а не через панель админа.'],
+    ['Потоки и безопасность', 'reuse detection', '', 'Обнаружение повторного использования старого refresh-токена: значит, украден. АС отзывает все сессии каскадом.'],
+    ['Потоки и безопасность', 'CSRF', '', '«Подсунь чужой запрос». Лечат: сверка state, SameSite cookie, Origin-проверка на /token.'],
+    ['Потоки и безопасность', 'HttpOnly / SameSite', '', 'Флаги cookie: HttpOnly — невидим JS (сессии и refresh), SameSite=Lax — не улетает на чужие сайты.'],
+    ['Потоки и безопасность', 'BFF', 'Backend-for-Frontend', 'Мини-бэкенд для SPA: токены живут у него, браузер знает только cookie-сессию.'],
+    ['Потоки и безопасность', '401 / invalid_token', '', '«Пропуск не действует». Клиент обновляет токен (DPoP — новый Proof) и повторяет; не проходит — перелогин.']
+  ];
+  var glosQ = document.getElementById('a21-glos-q');
+  var glosList = document.getElementById('a21-glos-list');
+  var glosCount = document.getElementById('a21-glos-count');
+  function glosNorm(s) {
+    s = String(s).toLowerCase();
+    var map = { 'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'e','ж':'zh','з':'z','и':'i','й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'x','ц':'ts','ч':'ch','ш':'sh','щ':'sch','э':'e','ю':'yu','я':'ya' };
+    return s.replace(/[а-яё]/g, function (c) { return map[c] || c; });
+  }
+  function glosRender() {
+    var q = glosNorm(glosQ.value);
+    var groups = {}, order = [], shown = 0;
+    GLOS.forEach(function (e) {
+      var name = e[1], full = e[2] || '', def = e[3];
+      var hay = glosNorm(name + ' ' + full + ' ' + def);
+      if (q && hay.indexOf(q) === -1) return;
+      shown++;
+      var arr = groups[e[0]] || (groups[e[0]] = []);
+      arr.push({ name: name, full: full, def: def });
+      if (order.indexOf(e[0]) === -1) order.push(e[0]);
+    });
+    glosList.textContent = '';
+    if (!shown) {
+      var em = document.createElement('div');
+      em.className = 'glos-empty';
+      em.textContent = 'Ничего не найдено. Попробуйте «nonce», «jwks» или «DPoP».';
+      glosList.appendChild(em);
+    } else {
+      order.forEach(function (grp) {
+        var h = document.createElement('h3');
+        h.className = 'glos-group';
+        h.textContent = grp;
+        glosList.appendChild(h);
+        groups[grp].forEach(function (it) {
+          var card = document.createElement('div');
+          card.className = 'glos-card';
+          var t = document.createElement('div');
+          t.innerHTML = '<span class="glos-term"></span>';
+          t.querySelector('.glos-term').textContent = it.name;
+          if (it.full) {
+            var f = document.createElement('span');
+            f.className = 'glos-full';
+            f.textContent = it.full;
+            t.appendChild(f);
+          }
+          card.appendChild(t);
+          var dp = document.createElement('p');
+          dp.className = 'glos-def';
+          dp.textContent = it.def;
+          card.appendChild(dp);
+          glosList.appendChild(card);
+        });
+      });
+    }
+    glosCount.textContent = glosQ.value.trim()
+      ? shown + ' из ' + GLOS.length
+      : 'всего ' + GLOS.length + ' терминов';
+  }
+  glosQ.addEventListener('input', glosRender);
+  function scrollGlos() { glosRender(); }
+  glosRender();
+
+  /* ── Тема ── */
+  var themeBtn = document.getElementById('a21-theme');
+  function syncThemeLabel() {
+    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    var lbl = dark ? 'Переключить на светлую тему' : 'Переключить на тёмную тему';
+    themeBtn.setAttribute('aria-label', lbl);
+    themeBtn.title = 'Тема: ' + (dark ? 'тёмная' : 'светлая');
+  }
+  themeBtn.addEventListener('click', function () {
+    var t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', t);
+    try { localStorage.setItem('a21diag-theme', t); } catch (e) {}
+    syncThemeLabel();
+  });
+  syncThemeLabel();
+
+  /* ── Глоссарий ── */
+  var GLOSS = [
+    ['Основы', 'OAuth 2.0', 'Фреймворк делегирования доступа: приложение получает разрешение работать с чужими данными, не зная пароль пользователя. В 2.1 урезан до безопасного набора потоков.', [{ k: 'core', s: 0 }]],
+    ['Основы', 'OpenID Connect (OIDC)', 'Слой аутентификации поверх OAuth 2.0: отвечает «кто вошёл». Включается scope=openid и добавляет подписанный ID-токен.', [{ k: 'core', s: 14 }]],
+    ['Основы', 'РП / Relying Party', '«Ваше приложение»: сторона, которой нужен вход и/или доступ к данным. На диаграммах — левый узел.', [{ k: 'core', s: 2 }]],
+    ['Основы', 'АС / Authorization Server', '«Ресепшн»: сервис, который проверяет пользователя и выдаёт токены. В OIDC он же OpenID Provider (OP). Примеры: Keycloak, Google, Auth0, Okta.', [{ k: 'core', s: 5 }, { k: 'discover', s: 1 }]],
+    ['Основы', 'API / сервер ресурсов', 'Ваш сервер данных. Проверяет access-токен на каждом запросе и отдаёт данные.', [{ k: 'core', s: 15 }, { k: 'dpop', s: 4 }]],
+    ['Основы', 'Публичный клиент', 'SPA, мобильное, CLI: код видит пользователь, секрет хранить негде. В 2.1 обязан работать только через PKCE.', [{ k: 'pkce', s: 1 }]],
+    ['Основы', 'Конфиденциальный клиент', 'Приложение с бэкендом: умеет хранить секрет (client_secret или ключ). Для него доступны потоки с аутентификацией клиента.', [{ k: 'client', s: 1 }]],
+    ['Основы', 'Session (сид, sid)', 'Идентификатор сессии у АС. В 2.1 обязателен в ID-токене — по нему выход «разлетается» на все клиентские сессии.', [{ k: 'logout', s: 1 }]],
+    ['Основы', 'Бизнес-центр (аналогия)', 'Приложение — бизнес-центр, АС — ресепшн с пропусками, access-токен — пропуск на этаж, ID-токен — бейдж с именем.', [{ k: 'core', s: 0 }]],
+    ['Токены', 'Access-токен', 'Короткоживущий «пропуск» к API (минуты). В 2.1 должен быть sender-constrained (DPoP/mTLS) — без ключа клиента бесполезен.', [{ k: 'core', s: 15 }, { k: 'dpop', s: 4 }]],
+    ['Токены', 'Refresh-токен', '«Продление пропуска»: даёт новый access-токен без повторного входа. В 2.1 — только для конфиденциальных клиентов, только с ротацией.', [{ k: 'core', s: 17 }, { k: 'refresh', s: 1 }]],
+    ['Токены', 'ID-токен', 'Подписанный JWT «кто вошёл»: sub, имя, email, sid, nonce. Проверяется один раз при входе, затем выбрасывается.', [{ k: 'core', s: 14 }]],
+    ['Токены', 'JWT', 'Три части через точку: заголовок.данные.подпись. Читать можно, подделать нельзя без ключа.', [{ k: 'token', s: 1 }]],
+    ['Токены', 'Claims', 'Поля внутри JWT. Ключевые: sub (ID пользователя), iss, aud, exp, iat, nonce, sid, auth_time, acr.', [{ k: 'token', s: 1 }, { k: 'core', s: 14 }]],
+    ['Токены', 'sender-constrained токен', 'Токен, «приклеенный» к клиенту: работает только вместе с доказательством владения (DPoP-подпись или TLS-сертификат). Кража без ключа = мусор.', [{ k: 'dpop', s: 3 }]],
+    ['Параметры', 'client_id', 'Публичный «логин» приложения у АС. Не секрет.', [{ k: 'core', s: 3 }]],
+    ['Параметры', 'client_secret', '«Пароль» конфиденциального клиента. Только на бэкенде, с ограниченным сроком жизни (OAuth 2.1 рекомендует ≤ 1 года).', [{ k: 'client', s: 2 }]],
+    ['Параметры', 'redirect_uri', 'Адрес возврата после входа. Совпадает с зарегистрированным до символа — иначе ошибка.', [{ k: 'core', s: 9 }]],
+    ['Параметры', 'scope', '«Что можно»: список разрешений. openid — включает OIDC, profile/email — поля профиля, offline_access — refresh-токен.', [{ k: 'core', s: 4 }]],
+    ['Параметры', 'code', 'Одноразовая «квитанция» о входе: живёт секунды, один обмен на /token. В 2.1 обязателен PKCE.', [{ k: 'core', s: 7 }]],
+    ['Параметры', 'state', 'Случайная строка против CSRF: приложение запоминает перед редиректом и сверяет при возврате. Не совпала — ответ чужой.', [{ k: 'core', s: 10 }]],
+    ['Параметры', 'nonce', 'Одноразовая метка против повтора: уходит в запрос, возвращается внутри ID-токена. Бейдж нельзя переиспользовать.', [{ k: 'core', s: 4 }, { k: 'token', s: 4 }]],
+    ['Параметры', 'code_verifier / code_challenge', 'Пара PKCE: verifier — случайный секрет у клиента, challenge — его SHA-256-отпечаток в URL.challenge без verifier не обменяешь.', [{ k: 'pkce', s: 1 }, { k: 'core', s: 12 }]],
+    ['Параметры', 'grant_type', '«Как получаем токен»: authorization_code (обмен кода) — основной и фактически единственный в 2.1. implicit и resource owner password удалены.', [{ k: 'core', s: 11 }]],
+    ['Параметры', 'require_parc / require_pushed_authorization', 'Обязывает PAR: параметры /authorize не в URL, а в POST-запросе заранее (RFC 9126). Убирает секреты из адресной строки и Referer.', [{ k: 'par', s: 1 }, { k: 'par', s: 3 }]],
+    ['Эндпоинты', '/authorize', 'Страница входа АС. Сюда уходит браузер пользователя.', [{ k: 'core', s: 4 }, { k: 'par', s: 2 }]],
+    ['Эндпоинты', '/token', 'Обмен кода на токены. Только сервер-сервер (конфиденциальный клиент) или сам публичный клиент с PKCE; никогда не в URL.', [{ k: 'core', s: 11 }, { k: 'pkce', s: 5 }, { k: 'client', s: 2 }]],
+    ['Эндпоинты', '/userinfo', 'Профиль пользователя по access-токену: имя, email, picture.', [{ k: 'core', s: 14 }]],
+    ['Эндпоинты', '/introspect', 'Спросить АС «жив ли токен и чей?» — для непрозрачных (не-JWT) токенов.', [{ k: 'core', s: 0 }]],
+    ['Эндпоинты', '/revoke', '«Сдать пропуск»: отзыв access/refresh-токена.', [{ k: 'core', s: 19 }]],
+    ['Эндпоинты', 'jwks_uri / JWKS', 'Публичные ключи АС. По ним проверяется подпись JWT, не имея секретов. Кэшируется, при новом kid — обновляется.', [{ k: 'core', s: 14 }, { k: 'token', s: 3 }, { k: 'discover', s: 2 }]],
+    ['Эндпоинты', 'Discovery', 'GET /.well-known/openid-configuration: «прайс-лист» АС — все адреса и настройки в одном JSON.', [{ k: 'discover', s: 1 }]],
+    ['Эндпоинты', 'end_session_endpoint', 'Выход у АС: разрывает сессию провайдера, а не только вашу.', [{ k: 'core', s: 20 }]],
+    ['Безопасность', 'PKCE', '«Пикси»: обмен кода возможен только с code_verifier, который знает лишь инициатор входа. Лечит перехват code в публичных клиентах. Обязателен для всех в 2.1.', [{ k: 'core', s: 12 }, { k: 'pkce', s: 7 }]],
+    ['Безопасность', 'DPoP', '«Доказательство предъявления»: каждый запрос к /token подписывается одноразовым ключом DPoP; access-токен привязан к его отпечатку (cnf). Украденный без ключа не сработает.', [{ k: 'dpop', s: 3 }, { k: 'dpop', s: 5 }, { k: 'dpop', s: 6 }]],
+    ['Безопасность', 'mTLS', 'Взаимное TLS: клиент предъявляет сертификат. Альтернатива DPoP для sender-constraint; клиентские секреты через сертификат — без паролей.', [{ k: 'client', s: 5 }]],
+    ['Безопасность', 'private_key_jwt', 'Аутентификация клиента подписью, а не паролем: вместо client_secret — подпись запроса к /token приватным ключом. Ключи — в HSM.', [{ k: 'client', s: 2 }]],
+    ['Безопасность', 'reuse detection', 'Обнаружение переиспользования старого refresh-токена: значит, украденный. АС отзывает ВСЕ сессии клиента каскадом.', [{ k: 'refresh', s: 3 }, { k: 'refresh', s: 4 }]],
+    ['Безопасность', 'CSRF', '«Подсунь чужой запрос». Лечат: сверка state, SameSite=Lax cookie, Origin-заголовки на /token.', [{ k: 'core', s: 10 }]],
+    ['Безопасность', 'HttpOnly / SameSite', 'Флаги cookie: HttpOnly — невидим JavaScript (сезоны и refresh хранят здесь), SameSite=Lax — не улетает на чужие сайты.', [{ k: 'core', s: 0 }]],
+    ['Безопасность', 'BFF', 'Backend-for-Frontend: мини-бэкенд для SPA. Токены живут у него, браузер знает только cookie-сессию.', [{ k: 'core', s: 0 }]],
+    ['Безопасность', '401 / invalid_token', '«Пропуск не действует». Клиент обновляет токен (DPoP — новый Proof) и повторяет запрос; не проходит — перелогин.', [{ k: 'core', s: 0 }, { k: 'refresh', s: 2 }]],
+    ['Auth 2.1', 'Step-Up (MFA)', 'Усиление: при prompt=login + require_step_up=true и auth_time старше порога АС требует второй фактор. Уровень — в claim acr.', [{ k: 'stepup', s: 1 }, { k: 'stepup', s: 2 }]],
+    ['Auth 2.1', 'Device Flow', 'Вход с устройства без браузера (ТВ, CLI): код на экране → пользователь вводит его в браузере. long-polling с backoff (slow_down).', [{ k: 'device', s: 1 }]],
+    ['Auth 2.1', 'Front-channel logout', 'АС редиректит браузер клиента на logout URI: клиент выходит, пока пользователь видит. Нужен sid.', [{ k: 'logout', s: 3 }]],
+    ['Auth 2.1', 'Back-channel logout', 'АС сам шлёт клиенту подписанный POST с sid — клиент выходит, даже если вкладка закрыта. Резервный механизм.', [{ k: 'logout', s: 4 }]],
+    ['Auth 2.1', 'Dynamic Client Registration', 'RFC 7591: клиент регистрируется у АС API-вызовом, а не через панель админа. Асинхронный онбординг приложений.', [{ k: 'discover', s: 3 }]],
+    ['Auth 2.1', 'PAR (Pushed Authorization Requests)', 'RFC 9126: параметры авторизации — в POST-запросе, в ответе — один reference-токен для /authorize. Нет секретов в URL.', [{ k: 'par', s: 1 }, { k: 'par', s: 3 }, { k: 'par', s: 4 }]],
+    ['Auth 2.1', 'acr / amr', 'Claims: acr — достигнутый уровень проверки (e.g. urn:mfa), amr — методы (password, otp, webauthn). По ним РП решает, достаточно ли strong.', [{ k: 'stepup', s: 3 }]],
+    ['Auth 2.1', 'auth_time', 'Момент последней интерактивной проверки. РП сравнивает с порогом freshness — вот с чем работает Step-Up.', [{ k: 'stepup', s: 3 }]],
+  ];
+  var gmodal = document.getElementById('a21-gloss');
+  var glist = document.getElementById('a21-glist');
+  var gcats = document.getElementById('a21-gcats');
+  var gsearch = document.getElementById('a21-gsearch');
+  var gopenBtn = document.getElementById('a21-gopen');
+  var gFilter = '';
+  var gCat = '';
+  var glastFocus = null;
+  var LABELS = {"core": "Основной вход", "pkce": "PKCE", "client": "Авторизация клиента", "refresh": "Refresh-ротация", "dpop": "DPoP", "device": "Device Flow", "stepup": "Step-Up / MFA", "logout": "Выход", "token": "Проверка токена", "discover": "Discovery", "par": "PAR (9126)"};
+  var GCAT_ORDER = [];
+  GLOSS.forEach(function (e) { if (GCAT_ORDER.indexOf(e[0]) === -1) GCAT_ORDER.push(e[0]); });
+  function renderCats() {
+    gcats.textContent = '';
+    var all = document.createElement('button');
+    all.type = 'button'; all.className = 'gcat'; all.textContent = 'Все';
+    all.setAttribute('aria-pressed', gCat === '' ? 'true' : 'false');
+    all.addEventListener('click', function () { gCat = ''; renderCats(); renderGloss(); });
+    gcats.appendChild(all);
+    GCAT_ORDER.forEach(function (c) {
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'gcat'; b.textContent = c;
+      b.setAttribute('aria-pressed', gCat === c ? 'true' : 'false');
+      b.addEventListener('click', function () { gCat = c; renderCats(); renderGloss(); });
+      gcats.appendChild(b);
+    });
+  }
+  function tagBtn(r) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'gtag';
+    b.setAttribute('data-k', r.k);
+    if (r.s) b.setAttribute('data-s', String(r.s));
+    b.textContent = LABELS[r.k] + (r.s ? '\u00b7\u00a0' + r.s : '');
+    b.title = 'Открыть диаграмму: ' + LABELS[r.k] + (r.s ? ', шаг ' + r.s : '');
+    return b;
+  }
+  function renderGloss() {
+    glist.textContent = '';
+    var q = gFilter.trim().toLowerCase();
+    var shown = 0;
+    var anyInCat = 0;
+    GLOSS.forEach(function (e) {
+      if (gCat && e[0] !== gCat) {
+        if (q && (e[1] + ' ' + e[2]).toLowerCase().indexOf(q) >= 0) anyInCat++;
+        return;
+      }
+      if (q && (e[1] + ' ' + e[2]).toLowerCase().indexOf(q) === -1) return;
+      var row = document.createElement('div'); row.className = 'gitem';
+      var t = document.createElement('span'); t.className = 'gterm'; t.textContent = e[1];
+      row.appendChild(t);
+      var rest = document.createElement('div'); rest.className = 'grest';
+      var d = document.createElement('p'); d.className = 'gdef'; d.textContent = e[2];
+      rest.appendChild(d);
+      if (e[3] && e[3].length) {
+        var tg = document.createElement('div'); tg.className = 'gtags';
+        e[3].forEach(function (r) { tg.appendChild(tagBtn(r)); });
+        rest.appendChild(tg);
+      }
+      row.appendChild(rest); glist.appendChild(row); shown++;
+    });
+    if (!shown) {
+      var em = document.createElement('div'); em.className = 'gempty';
+      em.textContent = q
+        ? 'По вашему запросу ничего не найдено'
+        : (gCat ? 'В категории «' + gCat + '» пока нет терминов' : 'Список пуст');
+      glist.appendChild(em);
+      if (q && anyInCat) {
+        var hint = document.createElement('p'); hint.className = 'gempty';
+        hint.textContent = 'Совпадения есть в других вкладках — выберите «Все».';
+        glist.appendChild(hint);
+      }
+    }
+  }
+      function openGloss() {
+    glastFocus = document.activeElement;
+    gmodal.hidden = false;
+    gsearch.value = ''; gFilter = '';
+    renderCats(); renderGloss();
+    document.body.style.overflow = 'hidden';
+    gsearch.focus();
+  }
+  function closeGloss() {
+    gmodal.hidden = true;
+    document.body.style.overflow = '';
+    if (glastFocus && glastFocus.focus) glastFocus.focus();
+  }
+  gopenBtn.addEventListener('click', openGloss);
+  document.getElementById('a21-gclose').addEventListener('click', closeGloss);
+  document.getElementById('a21-gclose2').addEventListener('click', closeGloss);
+  glist.addEventListener('click', function (e) {
+    var b = e.target.closest('button.gtag');
+    if (!b) return;
+    var k = b.getAttribute('data-k');
+    var s = parseInt(b.getAttribute('data-s'), 10) || 1;
+    closeGloss();
+    var tab = document.querySelector('.tab[data-diag="' + k + '"]');
+    if (!tab) return;
+    tab.click();
+    setTimeout(function () { if (stepFns[k]) stepFns[k](s - 1); }, 120);
+  });
+  gsearch.addEventListener('input', function () { gFilter = gsearch.value; renderGloss(); });
+  document.addEventListener('keydown', function (e) {
+    if (gmodal.hidden) return;
+    if (e.key === 'Escape') { e.preventDefault(); closeGloss(); }
+    if (e.key === 'Tab') {
+      var f = gmodal.querySelectorAll('button, input');
+      var vis = Array.prototype.filter.call(f, function (x) { return x.offsetParent !== null; });
+      if (!vis.length) return;
+      var first = vis[0], last = vis[vis.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  });
+
+  /* ── Cheat Sheet: копирование ── */
+  function copyText(t, btn) {
+    function done(ok) {
+      if (!btn) return;
+      btn.classList.add('ok');
+      btn.setAttribute('aria-label', ok ? 'Скопировано' : 'Не удалось скопировать');
+      setTimeout(function () {
+        btn.classList.remove('ok');
+        btn.setAttribute('aria-label', 'Копировать');
+      }, 2000);
+    }
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(t).then(function () { done(true); }, function () { done(fallbackCopy(t)); });
+    } else {
+      done(fallbackCopy(t));
+    }
+  }
+  function fallbackCopy(t) {
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = t;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      var ok = document.execCommand('copy');
+      ta.remove();
+      return ok;
+    } catch (e) { return false; }
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.sidebar .copybtn'), function (b) {
+    b.addEventListener('click', function () {
+      var code = b.parentElement.querySelector('code');
+      if (code) copyText(code.textContent, b);
+    });
+  });
+
+  /* ── Cheat Sheet: подсветка глоссария по активному шагу ── */
+  function sidebarHi() {
+    var k = null;
+    for (var key in stepMap) { k = key; break; }
+    if (!k) return;
+    var s = stepMap[k];
+    Array.prototype.forEach.call(document.querySelectorAll('.sidebar [data-step-match]'), function (el) {
+      var on = el.getAttribute('data-step-match').split(' ').indexOf(k + ':' + s) !== -1;
+      el.classList.toggle('rel', on);
+    });
+  }
+
+  /* ── Cheat Sheet: кнопки «→ шаг N» ── */
+  Array.prototype.forEach.call(document.querySelectorAll('.sidebar .stepgo'), function (b) {
+    b.addEventListener('click', function () {
+      var t = b.getAttribute('data-goto');
+      var kk = t.split(':')[0];
+      var step = +t.split(':')[1];
+      var tab = document.querySelector('.tab[data-diag="' + kk + '"]');
+      if (tab && !tab.classList.contains('active')) tab.click();
+      if (stepFns[kk]) stepFns[kk](step);
+      var p = panels[kk];
+      if (p) p.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+
+  buildDiag('core');
+  /* При загрузке показываем активную вкладку «Основной вход» (панель в HTML скрыта) */
+  (function () {
+    var panel = document.getElementById('a21-p-core');
+    if (panel) panel.hidden = false;
+    requestAnimationFrame(function () {
+      if (!panel) return;
+      var cw = Math.floor(panel.clientWidth);
+      var seq = document.getElementById('a21-seq-core');
+      if (cw >= 560) {
+        document.getElementById('a21-list-core').hidden = true;
+        seq.hidden = false;
+        if (!seq.querySelector('svg') || seq.getAttribute('data-w') !== String(cw)) drawSeqPublic('core', cw);
+      } else {
+        seq.hidden = true;
+        var list = document.getElementById('a21-list-core');
+        list.hidden = false;
+        if (!list.childElementCount) drawListPublic('core');
+      }
+    });
+  })();
+})();
+</script>
+</body>
+</html>
