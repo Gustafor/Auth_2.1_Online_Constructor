@@ -1,0 +1,3 @@
+theme: jekyll-theme-minimal
+title: Auth 2.1 + OpenID Connect — интерактивный конструктор потоков
+description: 11 интерактивных диаграмм OAuth 2.1 / OIDC — PKCE, DPoP, PAR, Device Flow, Step-Up, выход. Как работает протокол и как он реализован — шаг за шагом.
